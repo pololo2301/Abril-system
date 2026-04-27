@@ -1,0 +1,5 @@
+google-genai
+psutil
+python-dotenv
+pyautogui
+pyttsx3
