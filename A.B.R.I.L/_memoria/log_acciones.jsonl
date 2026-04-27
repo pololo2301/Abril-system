@@ -1,0 +1,36 @@
+{"timestamp": "2026-04-27T09:39:41.644152", "tipo": "sistema", "comando": "COMANDO_APRENDER", "parametros": {"nombre": "buscar_perritos"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:42:06.005255", "tipo": "sistema", "comando": "COMANDO_APRENDER", "parametros": {"nombre": "buscar_perritos"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:23.717894", "tipo": "sistema", "comando": "COMANDO_APRENDER", "parametros": {"nombre": "buscar_perritos"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:24.019992", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:25.569235", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "chrome"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:26.871564", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:29.870517", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "fotos de perritos"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:30.172459", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T09:47:30.174232", "tipo": "receta", "comando": "COMANDO_RECETA", "parametros": {"nombre": "buscar_perritos"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:07.276577", "tipo": "sistema", "comando": "COMANDO_APRENDER", "parametros": {"nombre": "buscar_imagenes_soul_eater"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:07.578843", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:09.127004", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "chrome"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:09.429976", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:13.430229", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "Soul eater images"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:13.732179", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T10:00:13.733869", "tipo": "receta", "comando": "COMANDO_RECETA", "parametros": {"nombre": "buscar_imagenes_soul_eater"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T14:41:08.045263", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T14:42:49.128116", "tipo": "sistema", "comando": "COMANDO_APRENDER", "parametros": {"nombre": "abrir_google_y_buscar_youtube"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T14:42:52.078713", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "chrome"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T14:42:55.667886", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "youtube"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T14:42:55.970024", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T14:42:55.971720", "tipo": "receta", "comando": "COMANDO_RECETA", "parametros": {"nombre": "abrir_google_y_buscar_youtube"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:13:40.239268", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:13:41.790096", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "Google"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:13:42.892784", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:13:42.893577", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "Google"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:09.902087", "tipo": "fisico", "comando": "COMANDO_CLICK_VISUAL", "parametros": {"objetivo": "perfil de Marco Antonio", "x": 931, "y": 491}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:54.152569", "tipo": "sistema", "comando": "COMANDO_APRENDER", "parametros": {"nombre": "calcular_200_menos_300"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:54.456521", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:56.211962", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:57.314106", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:57.314811", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:14:59.904582", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "200-300"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:15:01.207179", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:15:01.209112", "tipo": "receta", "comando": "COMANDO_RECETA", "parametros": {"nombre": "calcular_200_menos_300"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T16:15:47.846049", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "alt+f4"}, "resultado": "OK", "aprobado": true}

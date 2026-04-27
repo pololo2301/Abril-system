@@ -1,0 +1,291 @@
+{
+  "abrir_calculadora": {
+    "descripcion": "Abre la calculadora de Windows",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 1
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "calculadora"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 0.8
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      }
+    ],
+    "creada": "2026-04-27T09:23:38.341036",
+    "veces_usada": 0
+  },
+  "abrir_chrome": {
+    "descripcion": "Abre Google Chrome",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 1
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "chrome"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 0.8
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      }
+    ],
+    "creada": "2026-04-27T09:23:38.341045",
+    "veces_usada": 0
+  },
+  "captura_pantalla": {
+    "descripcion": "Toma una captura de pantalla con Snipping Tool",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win+shift+s"
+        }
+      }
+    ],
+    "creada": "2026-04-27T09:23:38.341049",
+    "veces_usada": 0
+  },
+  "minimizar_todo": {
+    "descripcion": "Minimiza todas las ventanas y muestra el escritorio",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win+d"
+        }
+      }
+    ],
+    "creada": "2026-04-27T09:23:38.341051",
+    "veces_usada": 0
+  },
+  "nuevo_escritorio_virtual": {
+    "descripcion": "Crea un nuevo escritorio virtual en Windows",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win+ctrl+d"
+        }
+      }
+    ],
+    "creada": "2026-04-27T09:23:38.341054",
+    "veces_usada": 0
+  },
+  "buscar_perritos": {
+    "descripcion": "Busca fotos de perritos en Chrome",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 1
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "chrome"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 1
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 2
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "fotos de perritos"
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      }
+    ],
+    "creada": "2026-04-27T09:47:23.716902",
+    "ultima_vez_usada": "2026-04-27T09:47:30.173299",
+    "veces_usada": 1
+  },
+  "buscar_imagenes_soul_eater": {
+    "descripcion": "Abre el navegador y busca imágenes de Soul eater en Google Imágenes.",
+    "pasos": [
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "win"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 1
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "chrome"
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 3
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "Soul eater images"
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      }
+    ],
+    "creada": "2026-04-27T10:00:07.275660",
+    "ultima_vez_usada": "2026-04-27T10:00:13.732968",
+    "veces_usada": 1
+  },
+  "abrir_google_y_buscar_youtube": {
+    "descripcion": "Abre el navegador Google Chrome y busca YouTube directamente.",
+    "pasos": [
+      {
+        "comando": "COMANDO_ABRIR_APP",
+        "parametros": {
+          "nombre": "chrome"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 3
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "youtube"
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      }
+    ],
+    "creada": "2026-04-27T14:42:49.127144",
+    "ultima_vez_usada": "2026-04-27T14:42:55.970813",
+    "veces_usada": 1
+  },
+  "calcular_200_menos_300": {
+    "descripcion": "Abre la calculadora y realiza la operación 200 - 300.",
+    "pasos": [
+      {
+        "comando": "COMANDO_ABRIR_APP",
+        "parametros": {
+          "nombre": "calculadora"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 2
+        }
+      },
+      {
+        "comando": "COMANDO_ESCRIBIR",
+        "parametros": {
+          "texto": "200-300"
+        }
+      },
+      {
+        "comando": "COMANDO_ESPERAR",
+        "parametros": {
+          "segundos": 1
+        }
+      },
+      {
+        "comando": "COMANDO_ATAJO",
+        "parametros": {
+          "teclas": "enter"
+        }
+      }
+    ],
+    "creada": "2026-04-27T16:14:54.151492",
+    "ultima_vez_usada": "2026-04-27T16:15:01.208094",
+    "veces_usada": 1
+  }
+}
