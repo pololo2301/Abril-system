@@ -201,7 +201,7 @@ class AbrilAgent:
 
         for intento in range(config.MAX_REINTENTOS_API):
             try:
-                response = await asyncio.to_thread(requests.post, url, json=payload, timeout=45)
+                response = await asyncio.to_thread(requests.post, url, json=payload, timeout=120)
                 if response.status_code == 200:
                     data = response.json()
                     # Pasamos la respuesta por tu validador existente
@@ -338,7 +338,7 @@ class AbrilAgent:
                 "stream": False,
                 "keep_alive": "1h"
             }
-            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=30)
+            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=120)
             if response.status_code == 200:
                 return response.json().get("response", "").strip()
             return "Sigo procesando la información internamente."
