@@ -192,10 +192,11 @@ class AbrilAgent:
         # URL local de Ollama
         url = "http://localhost:11434/api/generate"
         payload = {
-            "model": "llama3",
+            "model": "llama3.2",
             "prompt": full_prompt,
             "stream": False,
-            "format": "json" # Llama 3 forzará la salida a JSON válido
+            "format": "json",
+            "keep_alive": "1h"
         }
 
         for intento in range(config.MAX_REINTENTOS_API):
@@ -332,9 +333,10 @@ class AbrilAgent:
         try:
             url = "http://localhost:11434/api/generate"
             payload = {
-                "model": "llama3",
+                "model": "llama3.2",
                 "prompt": f"Eres A.B.R.I.L., una IA sofisticada y eficiente. Responde de forma breve y natural a: {prompt}",
-                "stream": False
+                "stream": False,
+                "keep_alive": "1h"
             }
             response = await asyncio.to_thread(requests.post, url, json=payload, timeout=30)
             if response.status_code == 200:
