@@ -8,6 +8,7 @@ import asyncio
 import pygame
 import os
 import re
+from cerebro.emociones import motor_emocional
 
 class MotorVoz:
     def __init__(self):
@@ -35,8 +36,27 @@ class MotorVoz:
 
         archivo = "temp_abril_voz.mp3"
         try:
-            # Tono neutro, eficiente y profesional, sin el pitch dulce
-            communicate = edge_tts.Communicate(texto_limpio, self.voz, rate="+2%")
+            # Ajuste dinámico de las cuerdas vocales según el Sistema Límbico
+            pitch = "+0Hz"
+            rate = "+2%"
+            
+            motor_emocional.procesar_ciclo()
+            
+            # Modulación emocional dinámica
+            if motor_emocional.estres > 70:
+                pitch = "+15Hz"   # Voz más aguda por la tensión
+                rate = "+20%"     # Habla más rápido
+            elif motor_emocional.energia < 30:
+                pitch = "-10Hz"   # Voz más grave por el cansancio
+                rate = "-15%"     # Habla más lento
+            elif motor_emocional.satisfaccion > 80:
+                pitch = "+5Hz"    # Un tono ligeramente más dulce/animado
+                rate = "+5%"
+            elif motor_emocional.satisfaccion < 30:
+                pitch = "-5Hz"    # Tono frío y apagado
+                rate = "+0%"
+                
+            communicate = edge_tts.Communicate(texto_limpio, self.voz, rate=rate, pitch=pitch)
             await communicate.save(archivo)
             
             # Reproducir con pygame bloqueando solo esta corutina

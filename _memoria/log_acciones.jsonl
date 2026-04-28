@@ -34,3 +34,7 @@
 {"timestamp": "2026-04-27T16:15:01.207179", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
 {"timestamp": "2026-04-27T16:15:01.209112", "tipo": "receta", "comando": "COMANDO_RECETA", "parametros": {"nombre": "calcular_200_menos_300"}, "resultado": "OK", "aprobado": true}
 {"timestamp": "2026-04-27T16:15:47.846049", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "alt+f4"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T18:18:42.277299", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T18:18:43.844883", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "chrome"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T18:18:44.947580", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-27T18:18:44.948401", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "chrome"}, "resultado": "OK", "aprobado": true}
