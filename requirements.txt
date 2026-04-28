@@ -3,3 +3,4 @@ psutil
 python-dotenv
 pyautogui
 pyttsx3
+requests

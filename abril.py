@@ -20,7 +20,7 @@ import subprocess
 import atexit
 from enum import Enum
 from datetime import datetime
-from google import genai
+import requests
 import config
 import herramientas
 import memoria
@@ -45,9 +45,9 @@ atexit.register(_cerrar_interfaz)
 
 
 # ==========================================
-# CLIENTE DE GEMINI
+# CLIENTE DE OLLAMA (LOCAL)
 # ==========================================
-client = genai.Client(api_key=config.CLAVE_API)
+# Se elimina el cliente de genai. Las llamadas se harán mediante requests.
 
 
 # ==========================================
@@ -177,50 +177,45 @@ class AbrilAgent:
             self.state = AgentState.IDLE
 
     # ------------------------------------------
-    # EL CEREBRO (Conexión Resiliente con Gemini)
+    # EL CEREBRO (Conexión 100% LOCAL con Llama 3)
     # ------------------------------------------
     async def decidir(self, user_prompt):
-        """Envía el prompt a Gemini y obtiene la decisión como JSON."""
+        """Envía el prompt a Ollama y obtiene la decisión como JSON."""
         self.state = AgentState.THINKING
-        print(f"\n🧠 [THINKING] Analizando: '{user_prompt}'")
+        print(f"\n🧠 [THINKING] Consultando red neuronal local (Llama 3)...")
 
         # --- Construcción Dinámica del Prompt (Psique + Emociones + Reglas) ---
         identidad = psique_core.construir_identidad()
         emociones = psique_core.inyectar_estado_emocional()
         full_prompt = f"{identidad}\n{emociones}\n{SYSTEM_PROMPT_REGLAS}\n\nPetición del usuario: {user_prompt}"
 
+        # URL local de Ollama
+        url = "http://localhost:11434/api/generate"
+        payload = {
+            "model": "llama3",
+            "prompt": full_prompt,
+            "stream": False,
+            "format": "json" # Llama 3 forzará la salida a JSON válido
+        }
+
         for intento in range(config.MAX_REINTENTOS_API):
             try:
-                response = await asyncio.to_thread(
-                    client.models.generate_content,
-                    model=self.modelo_actual,
-                    contents=full_prompt
-                )
-                return self._parse_decision(response.text.strip())
-
-            except Exception as e:
-                error_str = str(e)
-                # Catch both quota limits (429) and server overloads (503)
-                if any(err in error_str for err in ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"]):
-                    # Intentar con el modelo fallback (Cascada: Primario -> Fallback -> Pro)
-                    if self.modelo_actual == config.MODELO_PRIMARIO:
-                        print(f"⏳ [RED] Error en {self.modelo_actual}. Cambiando a {config.MODELO_FALLBACK}...")
-                        self.modelo_actual = config.MODELO_FALLBACK
-                        continue
-                    elif self.modelo_actual == config.MODELO_FALLBACK:
-                        print(f"⏳ [RED] Error en {self.modelo_actual}. Cambiando a {config.MODELO_PRO}...")
-                        self.modelo_actual = config.MODELO_PRO
-                        continue
-                        
-                    espera = config.INTERVALO_REINTENTO * (intento + 1)
-                    print(f"⏳ [RED] Todos los modelos saturados. Esperando {espera}s... (intento {intento + 1}/{config.MAX_REINTENTOS_API})")
-                    await asyncio.sleep(espera)
+                response = await asyncio.to_thread(requests.post, url, json=payload, timeout=45)
+                if response.status_code == 200:
+                    data = response.json()
+                    # Pasamos la respuesta por tu validador existente
+                    return self._parse_decision(data.get("response", ""))
                 else:
-                    print(f"❌ [ERROR] Fallo en el cerebro: {e}")
-                    return {"comando": "COMANDO_CHARLA", "parametros": {}}
+                    print(f"❌ [ERROR] Fallo en el servidor local: {response.status_code}")
+                    return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Tuve un fallo en mis circuitos locales, señor."}
 
-        print("⚠️ [ALERTA] No se pudo conectar tras varios intentos.")
-        return {"comando": "COMANDO_CHARLA", "parametros": {}}
+            except requests.exceptions.RequestException as e:
+                espera = config.INTERVALO_REINTENTO * (intento + 1)
+                print(f"⏳ [RED] Servidor local saturado o apagado. Esperando {espera}s... (intento {intento + 1})")
+                await asyncio.sleep(espera)
+
+        print("⚠️ [ALERTA] No se pudo conectar con Ollama tras varios intentos.")
+        return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Mis servidores locales no responden. Por favor, revise mi núcleo."}
 
     def _parse_decision(self, text):
         """Parsea la respuesta de Gemini a un dict, con múltiples fallbacks."""
@@ -333,16 +328,20 @@ class AbrilAgent:
         self.state = AgentState.IDLE
 
     async def _charlar(self, prompt):
-        """Genera una respuesta conversacional usando Gemini."""
+        """Genera una respuesta conversacional usando Ollama."""
         try:
-            response = await asyncio.to_thread(
-                client.models.generate_content,
-                model=self.modelo_actual,
-                contents=prompt
-            )
-            return response.text.strip()
+            url = "http://localhost:11434/api/generate"
+            payload = {
+                "model": "llama3",
+                "prompt": f"Eres A.B.R.I.L., una IA sofisticada y eficiente. Responde de forma breve y natural a: {prompt}",
+                "stream": False
+            }
+            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=30)
+            if response.status_code == 200:
+                return response.json().get("response", "").strip()
+            return "Sigo procesando la información internamente."
         except Exception as e:
-            return f"Lo siento, no pude procesar la conversación: {e}"
+            return f"Lo siento, mis circuitos de lenguaje están fallando: {e}"
 
     def _registrar(self, prompt, comando, resultado):
         """Guarda cada acción en el historial de la sesión."""
@@ -490,25 +489,16 @@ class AbrilAgent:
         print("=" * 58)
 
     async def _boot_sequence(self):
-        print("\n🔌 Conectando con Gemini API...", end=" ")
+        print("\n🔌 Conectando con núcleo local Ollama...", end=" ")
         try:
-            response = await asyncio.to_thread(
-                client.models.generate_content,
-                model=self.modelo_actual,
-                contents="Responde solo: ONLINE"
-            )
-            if response.text:
-                print("✅ Conectado")
+            # Hacemos ping al localhost en lugar de Google API
+            response = await asyncio.to_thread(requests.get, "http://localhost:11434/", timeout=5)
+            if response.status_code == 200:
+                print("✅ Conectado a Llama 3")
             else:
-                print("⚠️ Respuesta vacía, pero conectado")
+                print("⚠️ Servidor encendido, pero con advertencias")
         except Exception as e:
-            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                print(f"⚠️ Cuota limitada en {self.modelo_actual}")
-                if self.modelo_actual == config.MODELO_PRIMARIO:
-                    self.modelo_actual = config.MODELO_FALLBACK
-                    print(f"   Cambiando a modelo: {self.modelo_actual}")
-            else:
-                print(f"❌ Error: {e}")
+            print(f"❌ Error: Ollama no está en ejecución. Asegúrate de abrir la aplicación Ollama.")
 
         # Detectar pantalla
         pantalla_info = f"{config.PANTALLA_ANCHO}x{config.PANTALLA_ALTO}"
