@@ -18,7 +18,7 @@ except ImportError:
 CLAVE_API = os.environ.get("ABRIL_API_KEY")
 if not CLAVE_API:
     print("=" * 55)
-    print("  ⚠️  ERROR: No se encontró la clave de API")
+    print("  ERROR: No se encontro la clave de API")
     print("=" * 55)
     print("  Crea un archivo .env en la carpeta del proyecto:")
     print("     ABRIL_API_KEY=tu_clave_de_google_aqui")

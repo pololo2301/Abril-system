@@ -22,22 +22,29 @@ class AbrilAgent:
     # LAS MANOS DE A.B.R.I.L. (Herramientas OS)
     # ==========================================
     def tool_abrir_bloc_notas(self):
-        print("⚙️ [SISTEMA] Abriendo el Bloc de Notas...")
+        """Abre una instancia del bloc de notas de forma asíncrona."""
+        print("[SISTEMA] Abriendo el Bloc de Notas...")
         # Subprocess abre el programa de forma independiente sin bloquear a A.B.R.I.L.
         subprocess.Popen(['notepad.exe']) 
         return "Bloc de notas abierto."
 
     def tool_reporte_sistema(self):
-        print("⚙️ [SISTEMA] Generando reporte de arquitectura...")
+        """Genera un reporte básico del sistema operativo subyacente."""
+        print("[SISTEMA] Generando reporte de arquitectura...")
         os_info = platform.system() + " " + platform.release()
         return f"Sistema operativo: {os_info}. Todo en orden."
 
     def tool_desconocida(self):
-        print("⚠️ [SISTEMA] Acción no reconocida o no autorizada.")
+        """Manejador por defecto para acciones no reconocidas."""
+        print("[SISTEMA] Accion no reconocida o no autorizada.")
         return "Error: Herramienta no disponible."
 
     async def tool_charla_normal(self, user_prompt):
-        print("💬 [SISTEMA] Generando respuesta conversacional...")
+        """
+        Envía el prompt del usuario directamente a Gemini para generar 
+        una respuesta conversacional natural.
+        """
+        print("[SISTEMA] Generando respuesta conversacional...")
         # Usamos Gemini nuevamente para responder de forma natural
         try:
             response = await asyncio.to_thread(
@@ -47,15 +54,19 @@ class AbrilAgent:
             )
             return response.text.strip()
         except Exception as e:
-            print(f"❌ [SISTEMA ERROR] No se pudo generar la respuesta conversacional: {e}")
-            return "Lo siento, tuve un problema de conexión y no pude procesar la conversación."
+            print(f"[SISTEMA ERROR] No se pudo generar la respuesta conversacional: {e}")
+            return "Lo siento, tuve un problema de conexion y no pude procesar la conversacion."
 
     # ==========================================
-    # EL CEREBRO (Conexión con Gemini 2.5)
+    # EL CEREBRO (Conexión con Gemini)
     # ==========================================
     async def ask_gemini(self, user_prompt):
+        """
+        Consulta al modelo de Gemini para clasificar la intención del usuario
+        en un comando predefinido.
+        """
         self.state = AgentState.THINKING
-        print(f"\n🧠 [A.B.R.I.L. THINKING] Analizando petición: '{user_prompt}'")
+        print(f"\n[A.B.R.I.L. THINKING] Analizando peticion: '{user_prompt}'")
         
         # INGENIERÍA DE PROMPTS: Obligamos a la IA a responder como una máquina
         system_instruction = """
@@ -84,21 +95,24 @@ class AbrilAgent:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
                     espera = 15 * (intento + 1) # Espera 15s, luego 30s, etc.
-                    print(f"⏳ [A.B.R.I.L. RED] Límite de API alcanzado. Esperando {espera} segundos antes de reintentar...")
+                    print(f"[A.B.R.I.L. RED] Limite de API alcanzado. Esperando {espera} segundos antes de reintentar...")
                     await asyncio.sleep(espera)
                 else:
-                    print(f"❌ [A.B.R.I.L. ERROR] Fallo crítico en el cerebro: {e}")
+                    print(f"[A.B.R.I.L. ERROR] Fallo critico en el cerebro: {e}")
                     return "COMANDO_NULO" # Si hay otro error, aborta la tarea de forma segura
                     
-        print("⚠️ [A.B.R.I.L. ALERTA] No se pudo conectar con los servidores tras varios intentos.")
+        print("[A.B.R.I.L. ALERTA] No se pudo conectar con los servidores tras varios intentos.")
         return "COMANDO_NULO"
 
     # ==========================================
     # EL EJECUTOR (El puente entre Cerebro y Manos)
     # ==========================================
     async def execute_action(self, decision_key, user_prompt):
+        """
+        Ejecuta la función correspondiente a la decisión clasificada.
+        """
         self.state = AgentState.WORKING
-        print(f"⚡ [A.B.R.I.L. WORKING] Decisión tomada: {decision_key}")
+        print(f"[A.B.R.I.L. WORKING] Decision tomada: {decision_key}")
         
         # Evaluamos la decisión y ejecutamos la acción correspondiente
         if decision_key == "COMANDO_NOTAS":
@@ -111,7 +125,7 @@ class AbrilAgent:
         else:
             resultado = self.tool_desconocida()
         
-        print(f"✅ [A.B.R.I.L. IDLE] Resultado: {resultado}\n")
+        print(f"[A.B.R.I.L. IDLE] Resultado: {resultado}\n")
         self.state = AgentState.IDLE
 
     async def run(self):

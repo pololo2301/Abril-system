@@ -148,7 +148,16 @@ COMANDOS_CONFIRMACION_COPILOTO = {
 # CLASE PRINCIPAL DEL AGENTE
 # ==========================================
 class AbrilAgent:
+    """
+    Clase principal que representa al agente A.B.R.I.L.
+    Maneja el ciclo de vida, la memoria de corto plazo, el estado interno
+    y la interacción con el usuario a través de un REPL o la interfaz de voz.
+    """
     def __init__(self):
+        """
+        Inicializa las variables de estado, historial, modelos y recetas base
+        del sistema para comenzar a operar.
+        """
         self.state = AgentState.IDLE
         self.historial = []
         self.modelo_actual = config.MODELO_PRIMARIO
@@ -168,55 +177,51 @@ class AbrilAgent:
         ram = psutil.virtual_memory().percent
 
         if (cpu > config.UMBRAL_PELIGRO or ram > config.UMBRAL_PELIGRO) and self.state != AgentState.OVERLOADED:
-            print(f"\n🚨 [OVERLOADED] ¡Sobrecarga detectada! CPU: {cpu}% | RAM: {ram}%")
+            print(f"\n ¡Sobrecarga detectada! CPU: {cpu}% | RAM: {ram}%")
             print("   Pausando operaciones para proteger el equipo...")
             self.state = AgentState.OVERLOADED
 
         elif self.state == AgentState.OVERLOADED and cpu < config.UMBRAL_RECUPERACION and ram < config.UMBRAL_RECUPERACION:
-            print(f"\n✅ [ESTABILIZADO] Recursos normalizados (CPU: {cpu}% | RAM: {ram}%)")
+            print(f"\n Recursos normalizados (CPU: {cpu}% | RAM: {ram}%)")
             self.state = AgentState.IDLE
 
     # ------------------------------------------
     # EL CEREBRO (Conexión 100% LOCAL con Llama 3)
     # ------------------------------------------
     async def decidir(self, user_prompt):
-        """Envía el prompt a Ollama y obtiene la decisión como JSON."""
+        """Envía el prompt a LM Studio (RX 580) y obtiene la decisión en JSON."""
         self.state = AgentState.THINKING
-        print(f"\n🧠 [THINKING] Consultando red neuronal local (Llama 3)...")
+        print(f"\n🧠 [THINKING] Consultando núcleos locales en GPU (LM Studio)...")
 
-        # --- Construcción Dinámica del Prompt (Psique + Emociones + Reglas) ---
+        # Construcción del Prompt con tu Psique y Emociones actuales
         identidad = psique_core.construir_identidad()
         emociones = psique_core.inyectar_estado_emocional()
-        full_prompt = f"{identidad}\n{emociones}\n{SYSTEM_PROMPT_REGLAS}\n\nPetición del usuario: {user_prompt}"
+        system_content = f"{identidad}\n{emociones}\n{SYSTEM_PROMPT_REGLAS}"
 
-        # URL local de Ollama
-        url = "http://localhost:11434/api/generate"
+        url = "http://localhost:1234/v1/chat/completions"
         payload = {
-            "model": "llama3.2",
-            "prompt": full_prompt,
+            "model": "llama-3.2-3b-instruct", 
+            "messages": [
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.3,
             "stream": False,
-            "format": "json",
-            "keep_alive": "1h"
+            "response_format": { "type": "json_object" } # Esto es clave para que no falle el parseo
         }
 
-        for intento in range(config.MAX_REINTENTOS_API):
-            try:
-                response = await asyncio.to_thread(requests.post, url, json=payload, timeout=120)
-                if response.status_code == 200:
-                    data = response.json()
-                    # Pasamos la respuesta por tu validador existente
-                    return self._parse_decision(data.get("response", ""))
-                else:
-                    print(f"❌ [ERROR] Fallo en el servidor local: {response.status_code}")
-                    return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Tuve un fallo en mis circuitos locales, señor."}
-
-            except requests.exceptions.RequestException as e:
-                espera = config.INTERVALO_REINTENTO * (intento + 1)
-                print(f"⏳ [RED] Servidor local saturado o apagado. Esperando {espera}s... (intento {intento + 1})")
-                await asyncio.sleep(espera)
-
-        print("⚠️ [ALERTA] No se pudo conectar con Ollama tras varios intentos.")
-        return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Mis servidores locales no responden. Por favor, revise mi núcleo."}
+        try:
+            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=60)
+            if response.status_code == 200:
+                data = response.json()
+                respuesta_texto = data["choices"][0]["message"]["content"]
+                # Usamos tu función de limpieza de JSON que ya tienes programada
+                return self._parse_decision(respuesta_texto)
+            else:
+                return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Fallo de conexión con el núcleo gráfico."}
+        except Exception as e:
+            print(f"❌ Error de conexión con LM Studio: {e}")
+            return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Mis sistemas locales no responden, señor."}
 
     def _parse_decision(self, text):
         """Parsea la respuesta de Gemini a un dict, con múltiples fallbacks."""
@@ -264,24 +269,24 @@ class AbrilAgent:
             
             # Si el JSON no trajo voz, generamos una respuesta de respaldo
             if not texto_voz:
-                print(f"💬 [WORKING] Generando respuesta conversacional...")
+                print(f" Generando respuesta conversacional...")
                 texto_voz = await self._charlar(prompt_original)
                 
             self._registrar(prompt_original, comando, texto_voz)
-            print(f"\n💬 A.B.R.I.L.: {texto_voz}")
+            print(f"\n A.B.R.I.L.: {texto_voz}")
             decir(texto_voz)
             self.state = AgentState.IDLE
             return
 
         # Narrar lo que va a hacer antes de hacerlo (si hay texto_voz)
         if texto_voz:
-            print(f"\n💬 A.B.R.I.L.: {texto_voz}")
+            print(f"\n A.B.R.I.L.: {texto_voz}")
             decir(texto_voz)
 
         # Comando del sistema → ejecutar herramienta
         funcion = herramientas.CATALOGO.get(comando)
         if not funcion:
-            print(f"⚠️ Comando no reconocido: {comando}")
+            print(f" Comando no reconocido: {comando}")
             self.state = AgentState.IDLE
             return
 
@@ -289,14 +294,14 @@ class AbrilAgent:
         # CAPA DE SEGURIDAD: Modo Copiloto
         # ------------------------------------------
         if self.modo_copiloto and comando in COMANDOS_CONFIRMACION_COPILOTO:
-            print(f"\n🛡️ [COPILOTO] Acción que requiere confirmación:")
+            print(f"\n Acción que requiere confirmación:")
             print(f"   Comando: {comando}")
             print(f"   Parámetros: {parametros}")
             confirmacion = await asyncio.to_thread(
                 input, "   ¿Aprobar ejecución? (s/n): "
             )
             if confirmacion.strip().lower() not in ("s", "si", "sí", "y", "yes"):
-                print("   ❌ Acción cancelada por el usuario.")
+                print("    Acción cancelada por el usuario.")
                 memoria.registrar_accion(
                     "fisico", comando, parametros,
                     "CANCELADO por usuario (copiloto)", aprobado=False
@@ -305,23 +310,23 @@ class AbrilAgent:
                 return
 
         self.state = AgentState.WORKING
-        print(f"⚡ [WORKING] Ejecutando: {comando} {parametros if parametros else ''}")
+        print(f" Ejecutando: {comando} {parametros if parametros else ''}")
 
         try:
             resultado = funcion(**parametros)
             
             # Retroalimentación límbica basada en el resultado
-            if "✅" in resultado:
+            if "" in resultado:
                 motor_emocional.reaccionar_a_exito()
-            elif "❌" in resultado or "⚠️" in resultado:
+            elif "" in resultado or "" in resultado:
                 motor_emocional.reaccionar_a_error()
                 
         except Exception as e:
-            resultado = f"❌ Error al ejecutar {comando}: {e}"
+            resultado = f" Error al ejecutar {comando}: {e}"
             motor_emocional.reaccionar_a_error()
 
         self._registrar(prompt_original, comando, resultado)
-        print(f"\n📋 Resultado interno:\n{resultado}")
+        print(f"\n Resultado interno:\n{resultado}")
         
         # Ya no leemos el resultado de la terminal robóticamente
         # porque A.B.R.I.L. ya habló usando el campo "voz" antes de ejecutar.
@@ -329,21 +334,22 @@ class AbrilAgent:
         self.state = AgentState.IDLE
 
     async def _charlar(self, prompt):
-        """Genera una respuesta conversacional usando Ollama."""
+        """Respuestas naturales procesadas localmente."""
+        url = "http://localhost:1234/v1/chat/completions"
+        payload = {
+            "model": "llama-3.2-3b-instruct",
+            "messages": [
+                {"role": "system", "content": "Eres A.B.R.I.L., responde de forma ingeniosa y breve."},
+                {"role": "user", "content": prompt}
+            ],
+            "stream": False
+        }
         try:
-            url = "http://localhost:11434/api/generate"
-            payload = {
-                "model": "llama3.2",
-                "prompt": f"Eres A.B.R.I.L., una IA sofisticada y eficiente. Responde de forma breve y natural a: {prompt}",
-                "stream": False,
-                "keep_alive": "1h"
-            }
-            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=120)
-            if response.status_code == 200:
-                return response.json().get("response", "").strip()
-            return "Sigo procesando la información internamente."
-        except Exception as e:
-            return f"Lo siento, mis circuitos de lenguaje están fallando: {e}"
+            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=30)
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
+        except:
+            return "Sigo procesando la información en mis circuitos internos."
 
     def _registrar(self, prompt, comando, resultado):
         """Guarda cada acción en el historial de la sesión."""
@@ -363,20 +369,20 @@ class AbrilAgent:
         self._mostrar_banner()
         await self._boot_sequence()
         
-        print("\n🚀 [SISTEMA] Iniciando motores neuronales y visuales...")
+        print("\n Iniciando motores neuronales y visuales...")
         try:
             # Lanza la interfaz holográfica como proceso independiente
             _proceso_interfaz = subprocess.Popen([sys.executable, "interfaz.py"])
-            print("👁️ Interfaz holográfica activada.")
+            print(" Interfaz holográfica activada.")
         except Exception as e:
-            print(f"⚠️ No se pudo iniciar la interfaz visual: {e}")
+            print(f" No se pudo iniciar la interfaz visual: {e}")
 
         while True:
             try:
                 self.check_system_health()
 
                 if self.state == AgentState.OVERLOADED:
-                    print("🚨 Sistema sobrecargado. Esperando estabilización...")
+                    print(" Sistema sobrecargado. Esperando estabilización...")
                     await asyncio.sleep(2)
                     continue
 
@@ -387,11 +393,11 @@ class AbrilAgent:
                         audio_detectado = await asyncio.to_thread(motor_oidos.escuchar, silencioso=True)
                         if audio_detectado:
                             if "abril" in audio_detectado.lower():
-                                print(f"\n🗣️  Tú: {audio_detectado}")
+                                print(f"\n  Tú: {audio_detectado}")
                                 user_input = audio_detectado
                                 break
                             elif audio_detectado.lower() in ["salir", "apagar", "desactiva modo compañera", "desactivar modo compañera"]:
-                                print("\n🔌 Desactivando Modo Compañera...")
+                                print("\n Desactivando Modo Compañera...")
                                 self.modo_companera = False
                                 break
                         await asyncio.sleep(0.1)
@@ -407,12 +413,12 @@ class AbrilAgent:
                         user_input = await asyncio.to_thread(motor_oidos.escuchar, silencioso=False)
                         if not user_input:
                             continue
-                        print(f"\n🗣️  Tú: {user_input}")
+                        print(f"\n  Tú: {user_input}")
 
                 # Comandos internos del REPL
                 cmd_lower = user_input.lower()
                 if cmd_lower in ("salir", "exit", "quit"):
-                    print("\n👋 Apagando A.B.R.I.L. de forma segura...")
+                    print("\n Apagando A.B.R.I.L. de forma segura...")
                     break
                 elif cmd_lower == "ayuda":
                     self._mostrar_ayuda()
@@ -440,8 +446,8 @@ class AbrilAgent:
                     continue
                 elif cmd_lower == "voz":
                     motor_voz.activo = not motor_voz.activo
-                    estado_voz = "ON 🔊" if motor_voz.activo else "OFF 🔇"
-                    print(f"\n🔊 Voz de A.B.R.I.L.: {estado_voz}")
+                    estado_voz = "ON " if motor_voz.activo else "OFF "
+                    print(f"\n Voz de A.B.R.I.L.: {estado_voz}")
                     if motor_voz.activo:
                         decir("Sistemas de voz activados.")
                     continue
@@ -449,16 +455,16 @@ class AbrilAgent:
                 elif cmd_lower in ["compañera", "companera"]:
                     self.modo_companera = not self.modo_companera
                     if self.modo_companera:
-                        print("\n🎧 [MODO COMPAÑERA ACTIVADO]")
+                        print("\n [MODO COMPAÑERA ACTIVADO]")
                         print("   Estoy escuchando continuamente. Solo di 'Abril' en tu frase.")
                         print("   Para salir, di 'Desactiva modo compañera' o presiona Ctrl+C.")
                         decir("Modo compañera en línea. Te escucho, señor.")
                     else:
-                        print("\n🔌 [MODO COMPAÑERA DESACTIVADO]")
+                        print("\n [MODO COMPAÑERA DESACTIVADO]")
                         decir("Modo compañera desactivado. Pasando a control manual.")
                     continue
                 elif cmd_lower == "psique":
-                    print(f"\n🧠 [PSIQUE] {motor_emocional.obtener_estado_psicologico()}")
+                    print(f"\n {motor_emocional.obtener_estado_psicologico()}")
                     print(f"   Estrés: {motor_emocional.estres:.1f}%")
                     print(f"   Satisfacción: {motor_emocional.satisfaccion:.1f}%")
                     print(f"   Energía: {motor_emocional.energia:.1f}%")
@@ -469,61 +475,63 @@ class AbrilAgent:
                 await self.ejecutar(decision, user_input)
 
             except KeyboardInterrupt:
-                print("\n\n👋 Apagando A.B.R.I.L. de forma segura...")
+                print("\n\n Apagando A.B.R.I.L. de forma segura...")
                 break
             except Exception as e:
-                print(f"\n❌ Error inesperado: {e}")
+                print(f"\n Error inesperado: {e}")
                 self.state = AgentState.IDLE
 
     def _toggle_copiloto(self):
         """Alterna entre modo copiloto y piloto automático."""
         self.modo_copiloto = not self.modo_copiloto
-        modo = "COPILOTO (confirmación manual)" if self.modo_copiloto else "PILOTO AUTOMÁTICO ⚠️"
-        print(f"\n🛡️ Modo cambiado a: {modo}")
+        modo = "COPILOTO (confirmación manual)" if self.modo_copiloto else "PILOTO AUTOMÁTICO "
+        print(f"\n Modo cambiado a: {modo}")
         if not self.modo_copiloto:
-            print("   ⚠️ PRECAUCIÓN: A.B.R.I.L. ejecutará acciones físicas sin pedir confirmación.")
+            print("    PRECAUCIÓN: A.B.R.I.L. ejecutará acciones físicas sin pedir confirmación.")
             print("   Los atajos prohibidos y límites de sesión siguen activos como red de seguridad.")
 
     def _mostrar_banner(self):
+        """Muestra el texto de inicio de la aplicación."""
         print("\n" + "=" * 58)
-        print("   🧠 A.B.R.I.L. v4.0 — Fase 4: Árbol de Conocimiento")
+        print("    A.B.R.I.L. v4.0 — Fase 4: Árbol de Conocimiento")
         print("   Artificial Brain for Responsive Intelligent Learning")
         print("=" * 58)
 
     async def _boot_sequence(self):
-        print("\n🔌 Conectando con núcleo local Ollama...", end=" ")
+        """Secuencia de inicio: verificación de la conexión a la red neuronal local y módulos de hardware."""
+        print("\n Conectando con núcleo local LM Studio...", end=" ")
         try:
-            # Hacemos ping al localhost en lugar de Google API
-            response = await asyncio.to_thread(requests.get, "http://localhost:11434/", timeout=5)
+            # Hacemos ping al localhost de LM Studio
+            response = await asyncio.to_thread(requests.get, "http://localhost:1234/v1/models", timeout=5)
             if response.status_code == 200:
-                print("✅ Conectado a Llama 3")
+                print(" Conectado a LM Studio")
             else:
-                print("⚠️ Servidor encendido, pero con advertencias")
+                print(" Servidor encendido, pero con advertencias")
         except Exception as e:
-            print(f"❌ Error: Ollama no está en ejecución. Asegúrate de abrir la aplicación Ollama.")
+            print(f" Error: LM Studio no está en ejecución. Asegúrate de abrir la aplicación y el servidor local.")
 
         # Detectar pantalla
         pantalla_info = f"{config.PANTALLA_ANCHO}x{config.PANTALLA_ALTO}"
 
         cpu = psutil.cpu_percent()
         ram = psutil.virtual_memory().percent
-        print(f"🖥️  Sistema: CPU {cpu}% | RAM {ram}% | Pantalla: {pantalla_info}")
-        print(f"🔧 Herramientas: {len(herramientas.CATALOGO)} comandos disponibles")
-        print(f"🤖 Modelo activo: {self.modelo_actual}")
-        print(f"🛡️  Modo: {'COPILOTO (seguro)' if self.modo_copiloto else 'PILOTO AUTOMÁTICO ⚠️'}")
+        print(f"  Sistema: CPU {cpu}% | RAM {ram}% | Pantalla: {pantalla_info}")
+        print(f" Herramientas: {len(herramientas.CATALOGO)} comandos disponibles")
+        print(f" Modelo activo: {self.modelo_actual}")
+        print(f"  Modo: {'COPILOTO (seguro)' if self.modo_copiloto else 'PILOTO AUTOMÁTICO '}")
         
         # Estado de pyautogui
         if herramientas.PYAUTOGUI_DISPONIBLE:
-            print(f"🎮 Control físico: ✅ Activo | Fail-safe: ✅")
+            print(f" Control físico:  Activo | Fail-safe: ")
         else:
-            print(f"🎮 Control físico: ❌ Deshabilitado (instala pyautogui)")
+            print(f" Control físico:  Deshabilitado (instala pyautogui)")
             
-        print(f"🔊 Módulo de voz: {'✅ Neuronal Activa (Dalia)' if getattr(motor_voz, 'engine_cargado', True) else '❌ Error al cargar'}")
+        print(f" Módulo de voz: {' Neuronal Activa (Dalia)' if getattr(motor_voz, 'engine_cargado', True) else ' Error al cargar'}")
         
         # Recetas disponibles y poda automática
         recetas = memoria.cargar_recetas()
         if recetas:
-            print(f"📋 Habilidades en el Árbol: {len(recetas)}")
+            print(f" Habilidades en el Árbol: {len(recetas)}")
             # Poda automática de fondo (silenciosa si no hay nada que podar)
             resultado_poda = memoria.podar_arbol(dias_inactividad=30, umbral_uso=3)
             if "completada" in resultado_poda.lower():
@@ -532,19 +540,20 @@ class AbrilAgent:
         print("=" * 58)
         print("   Escribe tus órdenes en lenguaje natural.")
         print("   Escribe 'ayuda' para ver comandos. 'salir' para apagar.")
-        print("   🚨 FAIL-SAFE: Mueve el mouse a cualquier esquina para abortar.")
+        print("    FAIL-SAFE: Mueve el mouse a cualquier esquina para abortar.")
         print("=" * 58)
 
     def _mostrar_ayuda(self):
+        """Imprime por pantalla la lista de comandos disponibles en el sistema."""
         print("\n" + "─" * 58)
-        print("  📖 COMANDOS DISPONIBLES (Fase 3 — Control Físico)")
+        print("   COMANDOS DISPONIBLES (Fase 3 — Control Físico)")
         print("─" * 58)
-        print("  🔧 Básicos:")
+        print("   Básicos:")
         print("  • 'Abre un bloc de notas'")
         print("  • 'Dime qué sistema operativo tengo'")
         print("  • 'Escanea el hardware'")
         print("")
-        print("  📁 Gestión de Archivos:")
+        print("   Gestión de Archivos:")
         print("  • 'Organiza mi carpeta de descargas'")
         print("  • 'Crea un proyecto fullstack llamado MiApp'")
         print("  • 'Busca un archivo llamado factura.pdf'")
@@ -559,19 +568,19 @@ class AbrilAgent:
         print("  • 'Dame info del archivo proyecto.zip'")
         print("  • 'Muéstrame la papelera de A.B.R.I.L.'")
         print("")
-        print("  🎮 Control Físico:")
+        print("   Control Físico:")
         print("  • 'Escribe Hola mundo'")
         print("  • 'Presiona Win+D para ir al escritorio'")
         print("  • 'Abre la calculadora'")
         print("  • 'Toma una captura de pantalla'")
         print("  • 'Ejecuta la receta abrir_calculadora'")
         print("")
-        print("  🌳 Árbol de Conocimiento (NUEVO):")
+        print("   Árbol de Conocimiento (NUEVO):")
         print("  • 'Aprende a abrir youtube: presiona win, espera 1s, escribe chrome...'")
         print("  • 'Enséñame qué recetas sabes'")
         print("  • 'Limpia el árbol de conocimiento (poda)'")
         print("")
-        print("  💬 O cualquier pregunta casual / charla")
+        print("   O cualquier pregunta casual / charla")
         print("─" * 58)
         print("  Comandos del REPL:")
         print("  • ayuda     → Muestra este menú")
@@ -590,28 +599,30 @@ class AbrilAgent:
         print("─" * 58)
 
     def _mostrar_estado(self):
+        """Imprime las estadísticas actuales del uso de hardware y configuración del agente."""
         cpu = psutil.cpu_percent()
         ram = psutil.virtual_memory().percent
         disk = psutil.disk_usage('C:\\')
-        print(f"\n📊 Estado de A.B.R.I.L.:")
+        print(f"\n Estado de A.B.R.I.L.:")
         print(f"   Estado FSM:       {self.state.value}")
         print(f"   Modelo:           {self.modelo_actual}")
-        print(f"   Modo:             {'COPILOTO' if self.modo_copiloto else 'AUTOMÁTICO ⚠️'}")
+        print(f"   Modo:             {'COPILOTO' if self.modo_copiloto else 'AUTOMÁTICO '}")
         print(f"   CPU:              {cpu}%")
         print(f"   RAM:              {ram}%")
         print(f"   Disco C:          {disk.percent}% ({disk.free // (1024**3)} GB libres)")
         print(f"   Pantalla:         {config.PANTALLA_ANCHO}x{config.PANTALLA_ALTO}")
-        print(f"   Control físico:   {'✅ Activo' if herramientas.PYAUTOGUI_DISPONIBLE else '❌ No disponible'}")
-        print(f"   Síntesis voz:     {'🔊 ON' if motor_voz.activo else '🔇 OFF'}")
+        print(f"   Control físico:   {' Activo' if herramientas.PYAUTOGUI_DISPONIBLE else ' No disponible'}")
+        print(f"   Síntesis voz:     {' ON' if motor_voz.activo else ' OFF'}")
         print(f"   Acciones sesión:  {len(self.historial)}")
         # Mostrar stats rápidos de los contadores
         print(herramientas.estadisticas_fisicas())
 
     def _mostrar_historial(self):
+        """Imprime el registro de acciones que el agente ha tomado durante la sesión."""
         if not self.historial:
-            print("\n📜 No hay acciones registradas en esta sesión.")
+            print("\n No hay acciones registradas en esta sesión.")
             return
-        print(f"\n📜 Historial ({len(self.historial)} acciones):")
+        print(f"\n Historial ({len(self.historial)} acciones):")
         for i, entry in enumerate(self.historial, 1):
             print(f"   {i}. [{entry['hora']}] {entry['comando']} ← \"{entry['prompt'][:50]}\"")
 
@@ -627,4 +638,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n[SISTEMA] A.B.R.I.L. apagado.")
+        print("\nA.B.R.I.L. apagado.")

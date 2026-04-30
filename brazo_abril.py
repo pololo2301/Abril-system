@@ -26,23 +26,27 @@ class AbrilAgent:
     # LAS MANOS DE A.B.R.I.L. (Herramientas OS)
     # ==========================================
     def tool_abrir_bloc_notas(self):
-        print("⚙️ [SISTEMA] Abriendo el Bloc de Notas...")
+        """Abre una instancia del bloc de notas."""
+        print("[SISTEMA] Abriendo el Bloc de Notas...")
         subprocess.Popen(['notepad.exe']) 
         return "Bloc de notas abierto."
 
     def tool_reporte_sistema(self):
-        print("⚙️ [SISTEMA] Generando reporte de arquitectura...")
+        """Obtiene información básica del sistema operativo."""
+        print("[SISTEMA] Generando reporte de arquitectura...")
         os_info = platform.system() + " " + platform.release()
         return f"Sistema operativo: {os_info}. Todo en orden."
 
     def tool_escaner_hardware(self):
-        print("⚙️ [SISTEMA] Escaneando sensores de la placa base...")
+        """Escanea el uso de CPU y RAM."""
+        print("[SISTEMA] Escaneando sensores de la placa base...")
         cpu = psutil.cpu_percent()
         ram = psutil.virtual_memory().percent
         return f"Consumo actual -> CPU: {cpu}% | RAM: {ram}%"
 
     def tool_desconocida(self):
-        print("⚠️ [SISTEMA] Acción no reconocida o no autorizada.")
+        """Comando de respaldo en caso de que la herramienta no exista."""
+        print("[SISTEMA] Accion no reconocida o no autorizada.")
         return "Error: Herramienta no disponible."
 
     # ==========================================
@@ -55,21 +59,25 @@ class AbrilAgent:
 
         # Si el procesador o la memoria superan el 85%, entra en modo pánico
         if (cpu_usage > 85.0 or ram_usage > 85.0) and self.state != AgentState.OVERLOADED:
-            print(f"\n🚨 [A.B.R.I.L. OVERLOADED] ¡Peligro de sobrecarga! CPU: {cpu_usage}% | RAM: {ram_usage}%")
-            print("🚨 Pausando operaciones para proteger la integridad del equipo...")
+            print(f"\n[A.B.R.I.L. OVERLOADED] Peligro de sobrecarga! CPU: {cpu_usage}% | RAM: {ram_usage}%")
+            print("[A.B.R.I.L. OVERLOADED] Pausando operaciones para proteger la integridad del equipo...")
             self.state = AgentState.OVERLOADED
 
         # Si estaba en pánico y los recursos bajan del 60%, vuelve a la normalidad
         elif self.state == AgentState.OVERLOADED and cpu_usage < 60.0 and ram_usage < 60.0:
-            print(f"\n✅ [A.B.R.I.L. ESTABILIZADO] Recursos liberados (CPU: {cpu_usage}%). Retomando el trabajo.")
+            print(f"\n[A.B.R.I.L. ESTABILIZADO] Recursos liberados (CPU: {cpu_usage}%). Retomando el trabajo.")
             self.state = AgentState.IDLE
 
     # ==========================================
     # EL CEREBRO (Conexión Resiliente)
     # ==========================================
     async def ask_gemini(self, user_prompt):
+        """
+        Consulta a Gemini la intención del comando del usuario y lo mapea
+        a un comando interno usando prompts predefinidos.
+        """
         self.state = AgentState.THINKING
-        print(f"\n🧠 [A.B.R.I.L. THINKING] Analizando petición: '{user_prompt}'")
+        print(f"\n[A.B.R.I.L. THINKING] Analizando peticion: '{user_prompt}'")
         
         system_instruction = """
         Eres A.B.R.I.L. (Artificial Brain for Responsive Intelligent Learning).
@@ -95,7 +103,7 @@ class AbrilAgent:
             except Exception as e:
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                     espera = 15 * (intento + 1)
-                    print(f"⏳ [A.B.R.I.L. RED] Límite de API. Esperando {espera}s...")
+                    print(f"[A.B.R.I.L. RED] Limite de API. Esperando {espera}s...")
                     await asyncio.sleep(espera)
                 else:
                     return "COMANDO_NULO"
@@ -105,13 +113,17 @@ class AbrilAgent:
     # EL EJECUTOR
     # ==========================================
     async def execute_action(self, decision_key):
+        """
+        Ejecuta la función del sistema de acuerdo a la decisión 
+        obtenida de ask_gemini.
+        """
         if decision_key == "COMANDO_NULO":
-            print("✅ [A.B.R.I.L. IDLE] Petición ignorada o no procesable.\n")
+            print("[A.B.R.I.L. IDLE] Peticion ignorada o no procesable.\n")
             self.state = AgentState.IDLE
             return
 
         self.state = AgentState.WORKING
-        print(f"⚡ [A.B.R.I.L. WORKING] Decisión tomada: {decision_key}")
+        print(f"[A.B.R.I.L. WORKING] Decision tomada: {decision_key}")
         
         herramientas = {
             "COMANDO_NOTAS": self.tool_abrir_bloc_notas,
@@ -121,11 +133,14 @@ class AbrilAgent:
         
         funcion = herramientas.get(decision_key, self.tool_desconocida)
         resultado = funcion()
-        print(f"✅ [A.B.R.I.L. IDLE] Resultado: {resultado}\n")
+        print(f"[A.B.R.I.L. IDLE] Resultado: {resultado}\n")
         self.state = AgentState.IDLE
 
     async def run(self):
-        print("🖥️  A.B.R.I.L. en línea. Esperando órdenes...")
+        """
+        Bucle de ejecución principal asíncrono, con pausa en caso de emergencia.
+        """
+        print("A.B.R.I.L. en linea. Esperando ordenes...")
         while True:
             # 1. El agente revisa sus propios signos vitales en cada ciclo
             self.check_system_health()

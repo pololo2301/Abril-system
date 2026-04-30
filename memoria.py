@@ -91,7 +91,7 @@ def guardar_receta(nombre, descripcion, pasos):
     }
     with open(RUTA_RECETAS, "w", encoding="utf-8") as f:
         json.dump(recetas, f, ensure_ascii=False, indent=2)
-    return f"✅ Receta '{nombre}' guardada en el Árbol de Conocimiento con {len(pasos)} pasos."
+    return f"Receta '{nombre}' guardada en el Arbol de Conocimiento con {len(pasos)} pasos."
 
 
 def obtener_receta(nombre):
@@ -104,11 +104,11 @@ def listar_recetas():
     """Lista todas las recetas disponibles en el árbol."""
     recetas = cargar_recetas()
     if not recetas:
-        return "📋 El Árbol de Conocimiento está vacío."
+        return "El Arbol de Conocimiento esta vacio."
     
-    resumen = f"🌳 Árbol de Conocimiento ({len(recetas)} habilidades):\n"
+    resumen = f"Arbol de Conocimiento ({len(recetas)} habilidades):\n"
     for nombre, datos in recetas.items():
-        resumen += f"   🌿 {nombre}: {datos['descripcion']} ({len(datos['pasos'])} pasos, usada {datos['veces_usada']}x)\n"
+        resumen += f"   - {nombre}: {datos['descripcion']} ({len(datos['pasos'])} pasos, usada {datos['veces_usada']}x)\n"
     return resumen
 
 
@@ -129,7 +129,7 @@ def podar_arbol(dias_inactividad=30, umbral_uso=3):
     """
     recetas = cargar_recetas()
     if not recetas:
-        return "🌳 El árbol está vacío, no hay nada que podar."
+        return "El arbol esta vacio, no hay nada que podar."
         
     ahora = datetime.now()
     podadas = []
@@ -159,9 +159,9 @@ def podar_arbol(dias_inactividad=30, umbral_uso=3):
     if podadas:
         with open(RUTA_RECETAS, "w", encoding="utf-8") as f:
             json.dump(recetas, f, ensure_ascii=False, indent=2)
-        return f"✂️ Poda Neuronal completada: se olvidaron {len(podadas)} habilidades inútiles ({', '.join(podadas)})."
+        return f"Poda Neuronal completada: se olvidaron {len(podadas)} habilidades inutiles ({', '.join(podadas)})."
     
-    return "🌳 Árbol sano: ninguna habilidad requirió poda."
+    return "Arbol sano: ninguna habilidad requirio poda."
 
 
 # ==========================================
@@ -210,15 +210,19 @@ class ContadorSeguridad:
         self.atajos_presionados += 1
     
     def resumen(self):
+        """
+        Genera un reporte del uso físico de las herramientas en la sesión,
+        mostrando clics, teclas escritas y acciones bloqueadas.
+        """
         duracion = datetime.now() - self.inicio_sesion
         minutos = int(duracion.total_seconds() // 60)
         return (
-            f"📊 Estadísticas de Sesión Física:\n"
-            f"   ⌨️ Teclas escritas:     {self.teclas_escritas}/{config.MAX_TECLAS_SESION}\n"
-            f"   🖱️ Clics realizados:    {self.clics_realizados}/{config.MAX_CLICS_SESION}\n"
-            f"   ⌨️ Atajos presionados:  {self.atajos_presionados}/{config.MAX_ATAJOS_SESION}\n"
-            f"   🚫 Acciones bloqueadas: {self.acciones_bloqueadas}\n"
-            f"   ⏱️ Duración sesión:     {minutos} minutos"
+            f"Estadisticas de Sesion Fisica:\n"
+            f"   Teclas escritas:     {self.teclas_escritas}/{config.MAX_TECLAS_SESION}\n"
+            f"   Clics realizados:    {self.clics_realizados}/{config.MAX_CLICS_SESION}\n"
+            f"   Atajos presionados:  {self.atajos_presionados}/{config.MAX_ATAJOS_SESION}\n"
+            f"   Acciones bloqueadas: {self.acciones_bloqueadas}\n"
+            f"   Duracion sesion:     {minutos} minutos"
         )
 
 

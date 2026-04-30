@@ -6,7 +6,15 @@ from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QPainter, QColor, QPen
 
 class InterfazAbril(QWidget):
+    """
+    Clase que representa la interfaz holográfica reactiva de A.B.R.I.L.
+    Maneja una ventana sin bordes que reacciona visualmente al audio captado por el micrófono.
+    """
     def __init__(self):
+        """
+        Inicializa la ventana, las variables de animación y configura el flujo
+        de entrada de audio usando PyAudio para la reactividad.
+        """
         super().__init__()
         
         # 1. Configuración de ventana (Transparente, sin bordes y siempre arriba)
@@ -40,6 +48,10 @@ class InterfazAbril(QWidget):
         self.timer.start(30) # 30 milisegundos
 
     def actualizar_animacion(self):
+        """
+        Lee el flujo de audio en tiempo real y calcula el volumen actual 
+        para ajustar el radio de la animación holográfica dinámicamente.
+        """
         try:
             # Leer el micrófono en tiempo real
             data = np.frombuffer(self.stream.read(self.CHUNK, exception_on_overflow=False), dtype=np.int16)
@@ -105,5 +117,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ventana = InterfazAbril()
     ventana.show()
-    print("🎙️ Interfaz iniciada. Habla por el micrófono para ver la reacción.")
+    print("Interfaz iniciada. Habla por el microfono para ver la reaccion.")
     sys.exit(app.exec_())

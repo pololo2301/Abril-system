@@ -27,7 +27,7 @@ try:
     config.PANTALLA_ALTO = _screen_h
 except ImportError:
     PYAUTOGUI_DISPONIBLE = False
-    print("⚠️ [AVISO] pyautogui no instalado. Herramientas físicas deshabilitadas.")
+    print(" [AVISO] pyautogui no instalado. Herramientas físicas deshabilitadas.")
     print("   Instala con: py -m pip install pyautogui")
 
 # Importar motor de visión (Fase 6)
@@ -36,7 +36,7 @@ try:
     VISION_DISPONIBLE = True
 except ImportError:
     VISION_DISPONIBLE = False
-    print("⚠️ [AVISO] Módulo de visión no disponible.")
+    print(" [AVISO] Módulo de visión no disponible.")
 
 # Importar sistema de memoria
 import memoria
@@ -49,7 +49,7 @@ try:
     from cuerpo.motricidad.teclado import escribir_texto, presionar_atajo
     from cuerpo.motricidad.raton import hacer_clic, hacer_clic_visual, mover_mouse, hacer_scroll
 except ImportError as e:
-    print(f"⚠️ [AVISO] Módulos de motricidad no disponibles: {e}")
+    print(f" [AVISO] Módulos de motricidad no disponibles: {e}")
 
 # ==========================================
 # HERRAMIENTAS ORIGINALES (Núcleo)
@@ -58,7 +58,7 @@ except ImportError as e:
 def abrir_bloc_notas(**kwargs):
     """Abre un Bloc de Notas independiente sin bloquear al agente."""
     subprocess.Popen(['notepad.exe'])
-    return "✅ Bloc de notas abierto correctamente."
+    return " Bloc de notas abierto correctamente."
 
 
 def reporte_sistema(**kwargs):
@@ -100,11 +100,11 @@ CATEGORIAS_ARCHIVO = {
 
 def limpiar_descargas(**kwargs):
     """Organiza archivos sueltos de Descargas en carpetas por categoría."""
-    print("⚙️ [SISTEMA] Iniciando protocolo de limpieza en Descargas...")
+    print(" Iniciando protocolo de limpieza en Descargas...")
     ruta_descargas = config.RUTA_DESCARGAS
 
     if not ruta_descargas.exists():
-        return f"❌ La carpeta de descargas no existe: {ruta_descargas}"
+        return f" La carpeta de descargas no existe: {ruta_descargas}"
 
     archivos_movidos = 0
     sin_categoria = 0
@@ -141,9 +141,9 @@ def limpiar_descargas(**kwargs):
             sin_categoria += 1
 
     if archivos_movidos == 0:
-        return "📁 Tu carpeta de descargas ya está organizada. No hay archivos sueltos que mover."
+        return " Tu carpeta de descargas ya está organizada. No hay archivos sueltos que mover."
 
-    resumen = f"🧹 Se organizaron {archivos_movidos} archivo(s) en categorías:\n"
+    resumen = f" Se organizaron {archivos_movidos} archivo(s) en categorías:\n"
     for linea in detalle[:15]:
         resumen += linea + "\n"
     if len(detalle) > 15:
@@ -155,14 +155,14 @@ def limpiar_descargas(**kwargs):
 
 def crear_proyecto(**kwargs):
     """Crea una estructura de carpetas profesional para un proyecto nuevo."""
-    print("⚙️ [SISTEMA] Inicializando estructura base de desarrollo...")
+    print(" Inicializando estructura base de desarrollo...")
     nombre = kwargs.get("nombre", "Nuevo_Proyecto")
     tipo = kwargs.get("tipo", "fullstack").lower()
 
     ruta_proyecto = config.RUTA_ESCRITORIO / nombre
 
     if ruta_proyecto.exists():
-        return f"⚠️ Ya existe una carpeta llamada '{nombre}' en el Escritorio."
+        return f" Ya existe una carpeta llamada '{nombre}' en el Escritorio."
 
     ruta_proyecto.mkdir(parents=True)
 
@@ -216,7 +216,7 @@ def crear_proyecto(**kwargs):
             (ruta_proyecto / carpeta).mkdir()
         (ruta_proyecto / "README.md").write_text(f"# {nombre}\n\nProyecto generado por A.B.R.I.L.\n", encoding="utf-8")
 
-    return f"📂 Proyecto '{nombre}' ({tipo}) creado en: {ruta_proyecto}"
+    return f" Proyecto '{nombre}' ({tipo}) creado en: {ruta_proyecto}"
 
 
 def buscar_archivo(**kwargs):
@@ -225,13 +225,13 @@ def buscar_archivo(**kwargs):
     ruta_inicio = kwargs.get("ruta", str(Path.home()))
 
     if not nombre:
-        return "⚠️ Necesito un nombre o patrón de archivo para buscar."
+        return " Necesito un nombre o patrón de archivo para buscar."
 
     resultados = []
     ruta = Path(ruta_inicio)
 
     if not ruta.exists():
-        return f"❌ La ruta '{ruta_inicio}' no existe."
+        return f" La ruta '{ruta_inicio}' no existe."
 
     excluir = {"Windows", "Program Files", "Program Files (x86)", "$Recycle.Bin",
                "ProgramData", "AppData", "node_modules", ".git", "__pycache__"}
@@ -249,20 +249,20 @@ def buscar_archivo(**kwargs):
                     ruta_completa = Path(dirpath) / filename
                     try:
                         tamano_str = _formato_tamano(ruta_completa.stat().st_size)
-                        resultados.append(f"   📄 {ruta_completa} ({tamano_str})")
+                        resultados.append(f"    {ruta_completa} ({tamano_str})")
                     except OSError:
-                        resultados.append(f"   📄 {ruta_completa}")
+                        resultados.append(f"    {ruta_completa}")
 
                     if len(resultados) >= config.MAX_RESULTADOS_BUSQUEDA:
                         resultados.append(f"   ... (límite de {config.MAX_RESULTADOS_BUSQUEDA} resultados)")
-                        return f"🔍 Resultados para '{nombre}':\n" + "\n".join(resultados)
+                        return f" Resultados para '{nombre}':\n" + "\n".join(resultados)
     except PermissionError:
         pass
 
     if not resultados:
-        return f"🔍 No se encontró ningún archivo que coincida con '{nombre}' en {ruta_inicio}"
+        return f" No se encontró ningún archivo que coincida con '{nombre}' en {ruta_inicio}"
 
-    return f"🔍 {len(resultados)} resultado(s) para '{nombre}':\n" + "\n".join(resultados)
+    return f" {len(resultados)} resultado(s) para '{nombre}':\n" + "\n".join(resultados)
 
 
 def leer_log(**kwargs):
@@ -271,21 +271,21 @@ def leer_log(**kwargs):
     lineas_param = int(kwargs.get("lineas", 0))
 
     if not ruta:
-        return "⚠️ Necesito la ruta del archivo para leerlo."
+        return " Necesito la ruta del archivo para leerlo."
 
     archivo = Path(ruta)
 
     if not archivo.exists():
-        return f"❌ El archivo no existe: {ruta}"
+        return f" El archivo no existe: {ruta}"
     if not archivo.is_file():
-        return f"❌ '{ruta}' no es un archivo válido."
+        return f" '{ruta}' no es un archivo válido."
 
     extensiones_seguras = {".txt", ".log", ".md", ".csv", ".json", ".xml",
                            ".py", ".js", ".html", ".css", ".yaml", ".yml",
                            ".ini", ".cfg", ".conf", ".sql", ".env", ".sh", ".bat"}
 
     if archivo.suffix.lower() not in extensiones_seguras:
-        return f"⚠️ Por seguridad, solo puedo leer archivos de texto ({', '.join(sorted(extensiones_seguras))})"
+        return f" Por seguridad, solo puedo leer archivos de texto ({', '.join(sorted(extensiones_seguras))})"
 
     try:
         contenido = archivo.read_text(encoding="utf-8", errors="replace")
@@ -303,9 +303,9 @@ def leer_log(**kwargs):
             contenido = f"[... archivo truncado, mostrando últimas 100 líneas de {total_lineas} ...]\n"
             contenido += "\n".join(ultimas)
 
-        return f"📖 Contenido de '{archivo.name}' ({_formato_tamano(archivo.stat().st_size)} | {total_lineas} líneas):\n\n{contenido}"
+        return f" Contenido de '{archivo.name}' ({_formato_tamano(archivo.stat().st_size)} | {total_lineas} líneas):\n\n{contenido}"
     except Exception as e:
-        return f"❌ Error al leer el archivo: {e}"
+        return f" Error al leer el archivo: {e}"
 
 
 def listar_directorio(**kwargs):
@@ -314,9 +314,9 @@ def listar_directorio(**kwargs):
     carpeta = Path(ruta)
 
     if not carpeta.exists():
-        return f"❌ La carpeta no existe: {ruta}"
+        return f" La carpeta no existe: {ruta}"
     if not carpeta.is_dir():
-        return f"❌ '{ruta}' no es un directorio."
+        return f" '{ruta}' no es un directorio."
 
     dirs = []
     files = []
@@ -326,14 +326,14 @@ def listar_directorio(**kwargs):
             if item.name.startswith('.'):
                 continue
             if item.is_dir():
-                dirs.append(f"   📁 {item.name}/")
+                dirs.append(f"    {item.name}/")
             else:
                 tamano = _formato_tamano(item.stat().st_size)
-                files.append(f"   📄 {item.name} ({tamano})")
+                files.append(f"    {item.name} ({tamano})")
     except PermissionError:
-        return f"❌ Sin permisos para acceder a: {ruta}"
+        return f" Sin permisos para acceder a: {ruta}"
 
-    resumen = f"📂 Contenido de {carpeta} ({len(dirs)} carpetas, {len(files)} archivos):\n"
+    resumen = f" Contenido de {carpeta} ({len(dirs)} carpetas, {len(files)} archivos):\n"
     for d in dirs[:20]:
         resumen += d + "\n"
     for f in files[:30]:
@@ -350,10 +350,10 @@ def abrir_carpeta(**kwargs):
     carpeta = Path(ruta)
 
     if not carpeta.exists():
-        return f"❌ La carpeta no existe: {ruta}"
+        return f" La carpeta no existe: {ruta}"
 
     subprocess.Popen(['explorer', str(carpeta)])
-    return f"✅ Carpeta abierta en el explorador: {carpeta}"
+    return f" Carpeta abierta en el explorador: {carpeta}"
 
 
 # ==========================================
@@ -366,13 +366,13 @@ def mover_archivo(**kwargs):
     destino = kwargs.get("destino", "")
 
     if not origen or not destino:
-        return "⚠️ Necesito la ruta de origen y la ruta de destino."
+        return " Necesito la ruta de origen y la ruta de destino."
 
     ruta_origen = Path(origen)
     ruta_destino = Path(destino)
 
     if not ruta_origen.exists():
-        return f"❌ El origen no existe: {origen}"
+        return f" El origen no existe: {origen}"
 
     # Si el destino es un directorio existente, mover dentro de él
     if ruta_destino.is_dir():
@@ -381,9 +381,9 @@ def mover_archivo(**kwargs):
     try:
         ruta_destino.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(ruta_origen), str(ruta_destino))
-        return f"✅ Movido: {ruta_origen.name} ➜ {ruta_destino}"
+        return f" Movido: {ruta_origen.name} ➜ {ruta_destino}"
     except Exception as e:
-        return f"❌ Error al mover: {e}"
+        return f" Error al mover: {e}"
 
 
 def analizar_espacio(**kwargs):
@@ -392,9 +392,9 @@ def analizar_espacio(**kwargs):
     carpeta = Path(ruta)
 
     if not carpeta.exists():
-        return f"❌ La carpeta no existe: {ruta}"
+        return f" La carpeta no existe: {ruta}"
 
-    print("⚙️ [SISTEMA] Analizando uso de espacio en disco...")
+    print(" Analizando uso de espacio en disco...")
     items_con_tamano = []
 
     try:
@@ -412,15 +412,15 @@ def analizar_espacio(**kwargs):
             except (PermissionError, OSError):
                 continue
     except PermissionError:
-        return f"❌ Sin permisos para acceder a: {ruta}"
+        return f" Sin permisos para acceder a: {ruta}"
 
     # Ordenar por tamaño descendente
     items_con_tamano.sort(key=lambda x: x[1], reverse=True)
     total = sum(t[1] for t in items_con_tamano)
 
-    resumen = f"📊 Análisis de espacio en {carpeta} (Total: {_formato_tamano(total)}):\n\n"
+    resumen = f" Análisis de espacio en {carpeta} (Total: {_formato_tamano(total)}):\n\n"
     for nombre, tamano, es_dir in items_con_tamano[:10]:
-        icono = "📁" if es_dir else "📄"
+        icono = "" if es_dir else ""
         porcentaje = (tamano / total * 100) if total > 0 else 0
         barra = "█" * int(porcentaje / 5) + "░" * (20 - int(porcentaje / 5))
         resumen += f"   {icono} {nombre:<35} {_formato_tamano(tamano):>10}  {barra} {porcentaje:.1f}%\n"
@@ -436,9 +436,9 @@ def encontrar_duplicados(**kwargs):
     carpeta = Path(ruta)
 
     if not carpeta.exists():
-        return f"❌ La carpeta no existe: {ruta}"
+        return f" La carpeta no existe: {ruta}"
 
-    print("⚙️ [SISTEMA] Escaneando archivos duplicados (esto puede tardar)...")
+    print(" Escaneando archivos duplicados (esto puede tardar)...")
 
     # Paso 1: Agrupar por tamaño (filtro rápido)
     por_tamano = {}
@@ -452,7 +452,7 @@ def encontrar_duplicados(**kwargs):
                 except (PermissionError, OSError):
                     continue
     except PermissionError:
-        return f"❌ Sin permisos para acceder a: {ruta}"
+        return f" Sin permisos para acceder a: {ruta}"
 
     # Paso 2: Solo verificar hash en grupos con mismo tamaño
     duplicados = []
@@ -476,13 +476,13 @@ def encontrar_duplicados(**kwargs):
                 duplicados.append((grupo, tamano))
 
     if not duplicados:
-        return f"✅ No se encontraron archivos duplicados en {carpeta}"
+        return f" No se encontraron archivos duplicados en {carpeta}"
 
-    resumen = f"🔍 Se encontraron {len(duplicados)} grupo(s) de duplicados en {carpeta}:\n\n"
+    resumen = f" Se encontraron {len(duplicados)} grupo(s) de duplicados en {carpeta}:\n\n"
     for i, (grupo, tamano) in enumerate(duplicados[:8], 1):
         resumen += f"   Grupo {i} ({_formato_tamano(tamano)}):\n"
         for archivo in grupo:
-            resumen += f"      📄 {archivo}\n"
+            resumen += f"       {archivo}\n"
     if len(duplicados) > 8:
         resumen += f"\n   ... y {len(duplicados) - 8} grupos más."
 
@@ -496,12 +496,12 @@ def info_archivo(**kwargs):
     ruta = kwargs.get("ruta", "")
 
     if not ruta:
-        return "⚠️ Necesito la ruta del archivo."
+        return " Necesito la ruta del archivo."
 
     archivo = Path(ruta)
 
     if not archivo.exists():
-        return f"❌ No existe: {ruta}"
+        return f" No existe: {ruta}"
 
     try:
         stat = archivo.stat()
@@ -509,7 +509,7 @@ def info_archivo(**kwargs):
         fecha_modificacion = datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
         fecha_acceso = datetime.fromtimestamp(stat.st_atime).strftime("%Y-%m-%d %H:%M:%S")
 
-        info = f"📋 Información de '{archivo.name}':\n"
+        info = f" Información de '{archivo.name}':\n"
         info += f"   📍 Ruta completa:   {archivo.resolve()}\n"
         info += f"   📦 Tamaño:          {_formato_tamano(stat.st_size)}\n"
         info += f"   📝 Extensión:       {archivo.suffix or '(sin extensión)'}\n"
@@ -520,11 +520,11 @@ def info_archivo(**kwargs):
         if archivo.is_dir():
             n_archivos = sum(1 for _ in archivo.rglob('*') if _.is_file())
             n_carpetas = sum(1 for _ in archivo.rglob('*') if _.is_dir())
-            info += f"   📁 Contenido:       {n_archivos} archivos, {n_carpetas} carpetas\n"
+            info += f"    Contenido:       {n_archivos} archivos, {n_carpetas} carpetas\n"
 
         return info
     except Exception as e:
-        return f"❌ Error al obtener información: {e}"
+        return f" Error al obtener información: {e}"
 
 
 def gestionar_papelera(**kwargs):
@@ -533,33 +533,33 @@ def gestionar_papelera(**kwargs):
 
     if accion == "listar":
         if not config.RUTA_PAPELERA.exists():
-            return "🗑️ La papelera de A.B.R.I.L. está vacía."
+            return " La papelera de A.B.R.I.L. está vacía."
 
         items = list(config.RUTA_PAPELERA.rglob('*'))
         archivos = [i for i in items if i.is_file()]
         tamano_total = sum(f.stat().st_size for f in archivos)
 
         if not archivos:
-            return "🗑️ La papelera de A.B.R.I.L. está vacía."
+            return " La papelera de A.B.R.I.L. está vacía."
 
-        resumen = f"🗑️ Papelera de A.B.R.I.L. ({len(archivos)} archivos, {_formato_tamano(tamano_total)}):\n"
+        resumen = f" Papelera de A.B.R.I.L. ({len(archivos)} archivos, {_formato_tamano(tamano_total)}):\n"
         for f in archivos[:15]:
             rel = f.relative_to(config.RUTA_PAPELERA)
-            resumen += f"   📄 {rel} ({_formato_tamano(f.stat().st_size)})\n"
+            resumen += f"    {rel} ({_formato_tamano(f.stat().st_size)})\n"
         if len(archivos) > 15:
             resumen += f"   ... y {len(archivos) - 15} más."
         return resumen
 
     elif accion == "vaciar":
         if not config.RUTA_PAPELERA.exists():
-            return "🗑️ La papelera ya está vacía."
+            return " La papelera ya está vacía."
         try:
             shutil.rmtree(str(config.RUTA_PAPELERA))
-            return "🗑️ Papelera vaciada completamente."
+            return " Papelera vaciada completamente."
         except Exception as e:
-            return f"❌ Error al vaciar la papelera: {e}"
+            return f" Error al vaciar la papelera: {e}"
 
-    return f"⚠️ Acción no reconocida: {accion}. Usa 'listar' o 'vaciar'."
+    return f" Acción no reconocida: {accion}. Usa 'listar' o 'vaciar'."
 
 
 # ==========================================
@@ -585,9 +585,9 @@ def esperar(**kwargs):
     # Limitar espera máxima a 10 segundos
     segundos = min(max(segundos, 0.1), 10.0)
     
-    print(f"⏳ [PAUSA] Esperando {segundos}s...")
+    print(f" Esperando {segundos}s...")
     time.sleep(segundos)
-    return f"✅ Pausa de {segundos}s completada."
+    return f" Pausa de {segundos}s completada."
 
 
 def abrir_app(**kwargs):
@@ -598,12 +598,12 @@ def abrir_app(**kwargs):
     nombre = kwargs.get("nombre", "")
     
     if not nombre:
-        return "⚠️ Necesito el nombre de la aplicación."
+        return " Necesito el nombre de la aplicación."
     
     if len(nombre) > 50:
         return "🚫 Nombre de aplicación demasiado largo."
     
-    print(f"🚀 [FÍSICO] Abriendo aplicación: '{nombre}'")
+    print(f" Abriendo aplicación: '{nombre}'")
     
     # Secuencia motriz
     presionar_atajo(teclas="win")
@@ -613,7 +613,7 @@ def abrir_app(**kwargs):
     presionar_atajo(teclas="enter")
     
     memoria.registrar_accion("fisico", "COMANDO_ABRIR_APP", {"nombre": nombre}, "OK")
-    return f"✅ Aplicación '{nombre}' abierta (si existe en el sistema)."
+    return f" Aplicación '{nombre}' abierta (si existe en el sistema)."
 
 
 def aprender_habilidad(**kwargs):
@@ -626,20 +626,20 @@ def aprender_habilidad(**kwargs):
     pasos = kwargs.get("pasos", [])
     
     if not nombre or not pasos:
-        return "⚠️ Para aprender, necesito un nombre y una lista de pasos."
+        return " Para aprender, necesito un nombre y una lista de pasos."
         
     # Validar que los pasos contengan comandos válidos
     comandos_validos = ["COMANDO_ESCRIBIR", "COMANDO_ATAJO", "COMANDO_CLICK", "COMANDO_MOVER_MOUSE", "COMANDO_ESPERAR", "COMANDO_ABRIR_APP"]
     
     for paso in pasos:
         if paso.get("comando") not in comandos_validos:
-            return f"❌ El comando '{paso.get('comando')}' no se puede usar dentro de una receta."
+            return f" El comando '{paso.get('comando')}' no se puede usar dentro de una receta."
             
     resultado = memoria.guardar_receta(nombre, descripcion, pasos)
     memoria.registrar_accion("sistema", "COMANDO_APRENDER", {"nombre": nombre}, "OK")
     
     # Auto-ejecutar la receta recién aprendida para probarla inmediatamente
-    print(f"\n🧠 [SISTEMA] Habilidad '{nombre}' aprendida. Iniciando prueba de ejecución automática...")
+    print(f"\n Habilidad '{nombre}' aprendida. Iniciando prueba de ejecución automática...")
     resultado_ejecucion = ejecutar_receta(nombre=nombre)
     
     return f"{resultado}\n\n--- Prueba de ejecución automática ---\n{resultado_ejecucion}"
@@ -651,13 +651,13 @@ def ejecutar_receta(**kwargs):
     
     if not nombre:
         recetas_texto = memoria.listar_recetas()
-        return f"⚠️ Necesito el nombre de la receta.\n\n{recetas_texto}"
+        return f" Necesito el nombre de la receta.\n\n{recetas_texto}"
     
     receta = memoria.obtener_receta(nombre)
     if not receta:
-        return f"❌ Receta '{nombre}' no encontrada.\n\n{memoria.listar_recetas()}"
+        return f" Receta '{nombre}' no encontrada.\n\n{memoria.listar_recetas()}"
     
-    print(f"📋 [RECETA] Ejecutando: '{nombre}' ({len(receta['pasos'])} pasos)")
+    print(f" Ejecutando: '{nombre}' ({len(receta['pasos'])} pasos)")
     
     resultados = []
     for i, paso in enumerate(receta["pasos"], 1):
@@ -667,20 +667,20 @@ def ejecutar_receta(**kwargs):
         # Buscar la herramienta en el catálogo
         funcion = CATALOGO.get(cmd)
         if not funcion:
-            resultados.append(f"   Paso {i}: ⚠️ Comando desconocido: {cmd}")
+            resultados.append(f"   Paso {i}:  Comando desconocido: {cmd}")
             continue
         
         try:
             resultado = funcion(**params)
             resultados.append(f"   Paso {i}: {resultado}")
         except Exception as e:
-            resultados.append(f"   Paso {i}: ❌ Error: {e}")
+            resultados.append(f"   Paso {i}:  Error: {e}")
             break  # Abortar receta si un paso falla
     
     memoria.incrementar_uso_receta(nombre)
     memoria.registrar_accion("receta", "COMANDO_RECETA", {"nombre": nombre}, "OK")
     
-    return f"📋 Receta '{nombre}' completada:\n" + "\n".join(resultados)
+    return f" Receta '{nombre}' completada:\n" + "\n".join(resultados)
 
 
 def listar_recetas_disponibles(**kwargs):
@@ -695,7 +695,7 @@ def podar_arbol_conocimiento(**kwargs):
     dias = int(kwargs.get("dias", 30))
     umbral = int(kwargs.get("umbral", 3))
     
-    print(f"✂️ [SISTEMA] Iniciando poda neuronal (Inactividad > {dias} días)...")
+    print(f" Iniciando poda neuronal (Inactividad > {dias} días)...")
     resultado = memoria.podar_arbol(dias_inactividad=dias, umbral_uso=umbral)
     memoria.registrar_accion("sistema", "COMANDO_PODAR", {"dias": dias}, "OK")
     return resultado
@@ -712,11 +712,11 @@ def ver_log_acciones(**kwargs):
     acciones = memoria.obtener_log_reciente(n)
     
     if not acciones:
-        return "📜 No hay acciones registradas en el log."
+        return " No hay acciones registradas en el log."
     
-    resumen = f"📜 Últimas {len(acciones)} acciones registradas:\n"
+    resumen = f" Últimas {len(acciones)} acciones registradas:\n"
     for a in acciones:
-        estado = "✅" if a.get("aprobado", True) else "🚫"
+        estado = "" if a.get("aprobado", True) else "🚫"
         resumen += f"   {estado} [{a['timestamp'][11:19]}] {a['tipo']}: {a['comando']}\n"
     return resumen
 

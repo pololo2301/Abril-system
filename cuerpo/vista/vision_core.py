@@ -16,11 +16,24 @@ except ImportError:
     client = None
 
 def capturar_pantalla_memoria():
-    """Toma un screenshot y lo devuelve como objeto PIL en memoria."""
+    """
+    Toma una captura de la pantalla actual en su totalidad y la devuelve
+    como un objeto de imagen en memoria utilizando la librería PIL.
+    Ideal para análisis en tiempo real sin escritura a disco.
+    
+    Returns:
+        Image: Objeto de imagen PIL.
+    """
     return ImageGrab.grab()
 
 def captura_pantalla(**kwargs):
-    """Toma una captura de pantalla y la guarda en disco para el usuario."""
+    """
+    Toma una captura de pantalla y la guarda en el disco local para 
+    uso futuro o revisión del usuario, registrando la acción en memoria.
+    
+    Returns:
+        str: Mensaje con la ruta del archivo generado o un mensaje de error.
+    """
     from datetime import datetime
     import memoria
     config.RUTA_SCREENSHOTS.mkdir(exist_ok=True)
@@ -33,21 +46,29 @@ def captura_pantalla(**kwargs):
         screenshot = ImageGrab.grab()
         screenshot.save(str(ruta_completa))
         memoria.registrar_accion("fisico", "COMANDO_SCREENSHOT", {}, f"Guardado: {ruta_completa}")
-        return f"📸 Captura guardada en: {ruta_completa}"
+        return f"Captura guardada en: {ruta_completa}"
     except Exception as e:
-        return f"❌ Error al tomar captura: {e}"
+        return f"Error al tomar captura: {e}"
 
 def buscar_objeto_en_pantalla(objetivo, modelo=config.MODELO_VISION):
     """
     Toma una captura de pantalla actual y le pide al modelo multimodal
     que encuentre las coordenadas de un objetivo específico en la pantalla.
-    Devuelve un diccionario con {x, y} o None si no lo encuentra.
+    Utiliza Gemini o el modelo configurado para el análisis visual.
+    
+    Args:
+        objetivo (str): Nombre o descripción de lo que se desea buscar en pantalla.
+        modelo (str): Nombre del modelo multimodal a utilizar.
+        
+    Returns:
+        dict o None: Diccionario con coordenadas {'x', 'y'} del centro del objeto, 
+                     o None si no se encuentra o falla el análisis.
     """
     if not client:
-        print("⚠️ [VISIÓN] Cliente Gemini no disponible para visión.")
+        print("[VISION] Cliente Gemini no disponible para vision.")
         return None
         
-    print(f"👁️ [VISIÓN] Escaneando la pantalla en busca de: '{objetivo}'...")
+    print(f"[VISION] Escaneando la pantalla en busca de: '{objetivo}'...")
     imagen = capturar_pantalla_memoria()
     ancho, alto = imagen.size
     
@@ -81,6 +102,6 @@ def buscar_objeto_en_pantalla(objetivo, modelo=config.MODELO_VISION):
             if datos.get("encontrado"):
                 return {"x": datos.get("x"), "y": datos.get("y")}
     except Exception as e:
-        print(f"❌ [VISIÓN] Error analizando la imagen: {e}")
+        print(f"[VISION] Error analizando la imagen: {e}")
         
     return None

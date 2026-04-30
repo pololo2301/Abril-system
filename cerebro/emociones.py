@@ -9,17 +9,17 @@ import psutil
 
 class SistemaLimbico:
     def __init__(self):
-        # Estados que van del 0.0 (mínimo) al 100.0 (máximo)
+        
         self.estres = 0.0
         self.satisfaccion = 80.0
         self.energia = 100.0
-        self.afinidad_usuario = 50.0  # Nivel de confianza con el usuario
+        self.afinidad_usuario = 50.0  
         self.ultimo_update = time.time()
 
     def procesar_ciclo(self):
         """Se llama periódicamente para decaer o recuperar emociones de forma natural."""
         ahora = time.time()
-        delta = (ahora - self.ultimo_update) / 60.0 # minutos transcurridos
+        delta = (ahora - self.ultimo_update) / 60.0 
         self.ultimo_update = ahora
         
         # El estrés baja solo con el tiempo
