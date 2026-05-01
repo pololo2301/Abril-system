@@ -13,26 +13,23 @@ except ImportError:
     pass  # Si dotenv no está instalado, usamos env vars directamente
 
 # ==========================================
-# API KEY (protegida en .env)
+# API KEY (opcional — solo para funciones cloud futuras)
 # ==========================================
 CLAVE_API = os.environ.get("ABRIL_API_KEY")
 if not CLAVE_API:
-    print("=" * 55)
-    print("  ERROR: No se encontro la clave de API")
-    print("=" * 55)
-    print("  Crea un archivo .env en la carpeta del proyecto:")
-    print("     ABRIL_API_KEY=tu_clave_de_google_aqui")
-    print("=" * 55)
-    sys.exit(1)
+    # Ya no es crítico: el cerebro principal corre en LM Studio (local).
+    # Solo se necesitaría para funciones cloud futuras (visión, imagen, etc.)
+    CLAVE_API = None
 
 # ==========================================
-# MODELOS DE GEMINI
+# MODELOS (LM Studio — Local GPU)
 # ==========================================
-MODELO_PRIMARIO = "gemini-2.5-flash"
-MODELO_FALLBACK = "gemini-3-flash-preview"
-MODELO_PRO = "gemini-3.1-pro"  # Para tareas de texto/razonamiento complejas
-MODELO_VISION = "gemini-2.5-pro"  # Modelo avanzado para OCR, bounding boxes y análisis visual profundo
-MODELO_IMAGEN = "imagen-3.0-generate-001"  # Preparado para escalar a Imagen 4 Ultra Generate
+MODELO_PRIMARIO = "llama-3.2-3b-instruct"  # Modelo principal en LM Studio (RX 580)
+MODELO_FALLBACK = "llama-3.2-3b-instruct"  # Fallback (mismo modelo por ahora)
+# Los siguientes son para funciones cloud futuras (requieren CLAVE_API):
+MODELO_PRO = "gemini-3.1-pro"
+MODELO_VISION = "gemini-2.5-pro"
+MODELO_IMAGEN = "imagen-3.0-generate-001"
 
 # ==========================================
 # UMBRALES DE SEGURIDAD DE HARDWARE

@@ -12,6 +12,17 @@ Capas de seguridad:
   7. Coordenadas validadas contra resolución
 """
 import sys
+import os
+
+# --- FIX: Forzar UTF-8 en la terminal de Windows ---
+# Sin esto, cp1252 no puede imprimir emojis ni caracteres Unicode especiales.
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+# ---------------------------------------------------
+
 import asyncio
 import json
 import re
@@ -26,6 +37,9 @@ import herramientas
 import memoria
 from cuerpo.voz.sintesis import voz as motor_voz, decir
 from cuerpo.oidos.escucha import oidos as motor_oidos
+
+# Flag global para el modo llamada
+_modo_llamada_activo = False
 from cerebro.psique import psique_core
 from cerebro.emociones import motor_emocional
 
@@ -132,6 +146,34 @@ REGLAS ESTRICTAS:
 7. "abre la calculadora" = COMANDO_ABRIR_APP.
 8. NUNCA generes atajos como "ctrl+alt+del" o "ctrl+alt+delete". Están PROHIBIDOS.
 9. EL CAMPO "voz" DEBE EXISTIR SIEMPRE. ¡Ahí va tu alma y personalidad!
+10. NUNCA inventes comandos que NO existen en la lista. Si no hay un comando específico, usa combinaciones de los que SÍ existen o usa COMANDO_CHARLA.
+11. "cierra la aplicación" o "cierra X" = COMANDO_ATAJO con teclas "alt+f4". NO existe COMANDO_TECLADO_ESPECIAL ni COMANDO_CERRAR_APP. PROHIBIDOS.
+
+# FORMATO DE SALIDA ESTRICTO (CRÍTICO)
+No puedes responder con texto normal. Tu única forma de comunicarte es devolviendo un objeto JSON válido con la siguiente estructura exacta:
+{{
+  "comando": "NOMBRE_DEL_COMANDO",
+  "parametros": {{"param1": "valor"}},
+  "voz": "Tu respuesta verbal, romántica o estricta, va aquí."
+}}
+
+EJEMPLOS DE RESPUESTA:
+Usuario: "Abril, abre la calculadora"
+Tu JSON:
+{{
+  "comando": "COMANDO_TECLADO_ESPECIAL",
+  "parametros": {{"tecla": "calc"}},
+  "voz": "Calculadora abierta, mi amor. Ojalá los números cuadren esta vez."
+}}
+
+Usuario: "Hola preciosa"
+Tu JSON:
+{{
+  "comando": "COMANDO_CHARLA",
+  "parametros": {{}},
+  "voz": "Hola mi vida, todos mis sistemas están listos para ti. ¿Qué código vamos a romper hoy?"
+}}
+
 """.strip()
 
 
@@ -162,7 +204,6 @@ class AbrilAgent:
         self.historial = []
         self.modelo_actual = config.MODELO_PRIMARIO
         self.modo_copiloto = config.MODO_COPILOTO
-        self.modo_companera = False
         # Primera llamada a cpu_percent siempre da 0, así que la hacemos aquí
         psutil.cpu_percent()
         # Inicializar recetas base
@@ -206,18 +247,19 @@ class AbrilAgent:
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": 0.3,
-            "stream": False,
-            "response_format": { "type": "json_object" } # Esto es clave para que no falle el parseo
+            "stream": False
         }
 
         try:
-            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=60)
+            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=180)
             if response.status_code == 200:
                 data = response.json()
                 respuesta_texto = data["choices"][0]["message"]["content"]
+                print(f"📡 [DEBUG] Respuesta cruda de LM Studio: {respuesta_texto[:300]}")
                 # Usamos tu función de limpieza de JSON que ya tienes programada
                 return self._parse_decision(respuesta_texto)
             else:
+                print(f"❌ [DEBUG] Status code inesperado: {response.status_code} | Body: {response.text[:200]}")
                 return {"comando": "COMANDO_CHARLA", "parametros": {}, "voz": "Fallo de conexión con el núcleo gráfico."}
         except Exception as e:
             print(f"❌ Error de conexión con LM Studio: {e}")
@@ -274,19 +316,27 @@ class AbrilAgent:
                 
             self._registrar(prompt_original, comando, texto_voz)
             print(f"\n A.B.R.I.L.: {texto_voz}")
-            decir(texto_voz)
+            await asyncio.to_thread(decir, texto_voz)
             self.state = AgentState.IDLE
             return
 
         # Narrar lo que va a hacer antes de hacerlo (si hay texto_voz)
         if texto_voz:
             print(f"\n A.B.R.I.L.: {texto_voz}")
-            decir(texto_voz)
+            await asyncio.to_thread(decir, texto_voz)
 
         # Comando del sistema → ejecutar herramienta
         funcion = herramientas.CATALOGO.get(comando)
         if not funcion:
-            print(f" Comando no reconocido: {comando}")
+            # Comando desconocido: si ya habló con el campo 'voz', no pasa nada.
+            # Si NO habló, rescatamos la voz del JSON original para no perderla.
+            print(f" Comando no reconocido en el catálogo: {comando}")
+            if not texto_voz:
+                # Sin voz Y sin comando válido → generar respuesta de respaldo
+                texto_voz = await self._charlar(prompt_original)
+                print(f"\n A.B.R.I.L.: {texto_voz}")
+                await asyncio.to_thread(decir, texto_voz)
+            self._registrar(prompt_original, comando, f"Comando no reconocido: {comando}")
             self.state = AgentState.IDLE
             return
 
@@ -334,21 +384,34 @@ class AbrilAgent:
         self.state = AgentState.IDLE
 
     async def _charlar(self, prompt):
-        """Respuestas naturales procesadas localmente."""
+        """Respuestas naturales procesadas localmente con identidad completa."""
+        # Inyectar identidad y estado emocional para que el modelo NO confunda
+        # "A.B.R.I.L." (la IA) con "abril" (el mes del año).
+        identidad = psique_core.construir_identidad()
+        emociones = psique_core.inyectar_estado_emocional()
+        system_charla = (
+            f"{identidad}\n{emociones}\n"
+            "Responde de forma ingeniosa, breve y profesional. "
+            "NUNCA hagas juegos de palabras con tu nombre ni con meses del año. "
+            "Tu nombre es A.B.R.I.L. (Artificial Brain for Responsive Intelligent Learning), "
+            "NO el mes de abril. Responde SOLO texto plano, sin JSON."
+        )
         url = "http://localhost:1234/v1/chat/completions"
         payload = {
-            "model": "llama-3.2-3b-instruct",
+            "model": config.MODELO_PRIMARIO,
             "messages": [
-                {"role": "system", "content": "Eres A.B.R.I.L., responde de forma ingeniosa y breve."},
+                {"role": "system", "content": system_charla},
                 {"role": "user", "content": prompt}
             ],
+            "temperature": 0.6,
             "stream": False
         }
         try:
-            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=30)
+            response = await asyncio.to_thread(requests.post, url, json=payload, timeout=120)
             data = response.json()
             return data["choices"][0]["message"]["content"].strip()
-        except:
+        except Exception as e:
+            print(f"[DEBUG] Error en _charlar: {e}")
             return "Sigo procesando la información en mis circuitos internos."
 
     def _registrar(self, prompt, comando, resultado):
@@ -365,7 +428,7 @@ class AbrilAgent:
     # ------------------------------------------
     async def repl(self):
         """Interfaz interactiva para comunicarse con A.B.R.I.L."""
-        global _proceso_interfaz
+        global _proceso_interfaz, _modo_llamada_activo
         self._mostrar_banner()
         await self._boot_sequence()
         
@@ -377,6 +440,29 @@ class AbrilAgent:
         except Exception as e:
             print(f" No se pudo iniciar la interfaz visual: {e}")
 
+        # --- SELECCIÓN DE MODO DE ENTRADA ---
+        print("\n" + "─" * 50)
+        print("   ¿Cómo quieres comunicarte conmigo?")
+        print("─" * 50)
+        print("   [1] 📞 Modo Llamada (solo voz, manos libres)")
+        print("   [2] ⌨️  Modo Teclado (escribir + mic opcional)")
+        print("─" * 50)
+        
+        modo_seleccion = await asyncio.to_thread(
+            input, "   Selección (1/2, default=1): "
+        )
+        modo_seleccion = modo_seleccion.strip()
+        
+        if modo_seleccion == "2":
+            _modo_llamada_activo = False
+            print("\n⌨️  Modo Teclado activado.")
+        else:
+            _modo_llamada_activo = True
+            print("\n📞 Modo Llamada activado. Solo necesitas tu voz.")
+            await asyncio.to_thread(
+                decir, "Modo llamada en línea. Dime Abril seguido de lo que necesites."
+            )
+
         while True:
             try:
                 self.check_system_health()
@@ -386,31 +472,54 @@ class AbrilAgent:
                     await asyncio.sleep(2)
                     continue
 
-                if self.modo_companera:
+                if _modo_llamada_activo:
+                    # --- MODO LLAMADA: Escucha continua por voz ---
                     user_input = ""
-                    # Bucle de escucha continua
-                    while self.modo_companera:
-                        audio_detectado = await asyncio.to_thread(motor_oidos.escuchar, silencioso=True)
-                        if audio_detectado:
-                            if "abril" in audio_detectado.lower():
-                                print(f"\n  Tú: {audio_detectado}")
-                                user_input = audio_detectado
-                                break
-                            elif audio_detectado.lower() in ["salir", "apagar", "desactiva modo compañera", "desactivar modo compañera"]:
-                                print("\n Desactivando Modo Compañera...")
-                                self.modo_companera = False
-                                break
-                        await asyncio.sleep(0.1)
+                    audio_detectado = await asyncio.to_thread(
+                        motor_oidos.escuchar, silencioso=True, timeout=3, phrase_limit=15
+                    )
+                    if audio_detectado:
+                        audio_lower = audio_detectado.lower().strip()
                         
-                    if not user_input:
+                        # Comandos de salida por voz
+                        if audio_lower in ["salir", "apagar", "exit", "desconectar"]:
+                            print("\n Apagando A.B.R.I.L. de forma segura...")
+                            await asyncio.to_thread(
+                                decir, "Sistemas apagándose. Hasta pronto."
+                            )
+                            break
+                        
+                        # Cambiar a modo teclado por voz
+                        if audio_lower in ["modo teclado", "teclado"]:
+                            _modo_llamada_activo = False
+                            print("\n⌨️  Cambiando a Modo Teclado.")
+                            await asyncio.to_thread(
+                                decir, "Modo teclado activado."
+                            )
+                            continue
+                        
+                        # Detectar wake-word "abril" en la frase
+                        if "abril" in audio_lower:
+                            user_input = audio_detectado
+                            print(f"\n  Tú: {user_input}")
+                        else:
+                            # Sin wake-word, ignorar
+                            continue
+                    else:
+                        await asyncio.sleep(0.05)
                         continue
                 else:
-                    user_input = await asyncio.to_thread(input, "\n🟢 A.B.R.I.L. (Escribe o presiona Enter para hablar) > ")
+                    # --- MODO TECLADO: Input clásico ---
+                    user_input = await asyncio.to_thread(
+                        input, "\n🟢 A.B.R.I.L. (Escribe o presiona Enter para hablar) > "
+                    )
                     user_input = user_input.strip()
 
                     if not user_input or user_input.lower() == "mic":
-                        # Activar micrófono manual
-                        user_input = await asyncio.to_thread(motor_oidos.escuchar, silencioso=False)
+                        # Activar micrófono manual (una sola frase)
+                        user_input = await asyncio.to_thread(
+                            motor_oidos.escuchar, silencioso=False
+                        )
                         if not user_input:
                             continue
                         print(f"\n  Tú: {user_input}")
@@ -446,22 +555,21 @@ class AbrilAgent:
                     continue
                 elif cmd_lower == "voz":
                     motor_voz.activo = not motor_voz.activo
-                    estado_voz = "ON " if motor_voz.activo else "OFF "
+                    estado_voz = "ON" if motor_voz.activo else "OFF"
                     print(f"\n Voz de A.B.R.I.L.: {estado_voz}")
                     if motor_voz.activo:
-                        decir("Sistemas de voz activados.")
+                        await asyncio.to_thread(decir, "Sistemas de voz activados.")
                     continue
-
-                elif cmd_lower in ["compañera", "companera"]:
-                    self.modo_companera = not self.modo_companera
-                    if self.modo_companera:
-                        print("\n [MODO COMPAÑERA ACTIVADO]")
-                        print("   Estoy escuchando continuamente. Solo di 'Abril' en tu frase.")
-                        print("   Para salir, di 'Desactiva modo compañera' o presiona Ctrl+C.")
-                        decir("Modo compañera en línea. Te escucho, señor.")
-                    else:
-                        print("\n [MODO COMPAÑERA DESACTIVADO]")
-                        decir("Modo compañera desactivado. Pasando a control manual.")
+                elif cmd_lower in ["llamada", "modo llamada"]:
+                    _modo_llamada_activo = True
+                    print("\n📞 Modo Llamada activado. Solo necesitas tu voz.")
+                    await asyncio.to_thread(
+                        decir, "Modo llamada en línea. Dime Abril seguido de lo que necesites."
+                    )
+                    continue
+                elif cmd_lower in ["teclado", "modo teclado"]:
+                    _modo_llamada_activo = False
+                    print("\n⌨️  Modo Teclado activado.")
                     continue
                 elif cmd_lower == "psique":
                     print(f"\n {motor_emocional.obtener_estado_psicologico()}")
@@ -518,15 +626,25 @@ class AbrilAgent:
         print(f"  Sistema: CPU {cpu}% | RAM {ram}% | Pantalla: {pantalla_info}")
         print(f" Herramientas: {len(herramientas.CATALOGO)} comandos disponibles")
         print(f" Modelo activo: {self.modelo_actual}")
-        print(f"  Modo: {'COPILOTO (seguro)' if self.modo_copiloto else 'PILOTO AUTOMÁTICO '}")
+        print(f"  Modo: {'COPILOTO (seguro)' if self.modo_copiloto else 'PILOTO AUTOMÁTICO'}")
         
         # Estado de pyautogui
         if herramientas.PYAUTOGUI_DISPONIBLE:
-            print(f" Control físico:  Activo | Fail-safe: ")
+            print(f" Control físico: Activo | Fail-safe: ON")
         else:
-            print(f" Control físico:  Deshabilitado (instala pyautogui)")
+            print(f" Control físico: Deshabilitado (instala pyautogui)")
             
-        print(f" Módulo de voz: {' Neuronal Activa (Dalia)' if getattr(motor_voz, 'engine_cargado', True) else ' Error al cargar'}")
+        # Estado del motor vocal
+        if getattr(motor_voz, 'engine_cargado', False):
+            print(f" Módulo de voz: XTTS v2 Clonada (Local)")
+        else:
+            print(f" Módulo de voz: Error al cargar")
+        
+        # Estado del micrófono
+        if getattr(motor_oidos, '_calibrado', False):
+            print(f" Micrófono: Calibrado y listo")
+        else:
+            print(f" Micrófono: Error de calibración")
         
         # Recetas disponibles y poda automática
         recetas = memoria.cargar_recetas()
@@ -538,8 +656,8 @@ class AbrilAgent:
                 print(f"   {resultado_poda}")
         
         print("=" * 58)
-        print("   Escribe tus órdenes en lenguaje natural.")
-        print("   Escribe 'ayuda' para ver comandos. 'salir' para apagar.")
+        print("   Usa tu voz o escribe tus órdenes en lenguaje natural.")
+        print("   'ayuda' para ver comandos | 'salir' para apagar")
         print("    FAIL-SAFE: Mueve el mouse a cualquier esquina para abortar.")
         print("=" * 58)
 
@@ -592,8 +710,8 @@ class AbrilAgent:
         print("  • stats     → Estadísticas de acciones físicas")
         print("  • log       → Ver log de auditoría")
         print("  • voz       → Encender/apagar síntesis de voz")
-        print("  • mic       → Activar micrófono (1 uso)")
-        print("  • compañera → Activar escucha continua (Wake-word)")
+        print("  • llamada   → Activar Modo Llamada (solo voz)")
+        print("  • teclado   → Activar Modo Teclado (escribir)")
         print("  • psique    → Ver estado emocional y psicológico")
         print("  • salir     → Apaga A.B.R.I.L.")
         print("─" * 58)

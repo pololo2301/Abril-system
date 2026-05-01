@@ -46,3 +46,26 @@
 {"timestamp": "2026-04-27T21:33:00.923604", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
 {"timestamp": "2026-04-27T21:33:02.025906", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
 {"timestamp": "2026-04-27T21:33:02.026498", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T16:46:57.559818", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T16:46:59.315975", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T16:47:00.419961", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T16:47:00.420631", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:15:56.824337", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:15:58.585562", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:15:59.687958", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:15:59.687958", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:24:38.658316", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:24:40.414102", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:24:41.516459", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:24:41.516459", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:25:46.938368", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "alt+f4"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:31:19.714821", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:31:21.471007", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:31:22.573760", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:31:22.574891", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:31:55.073714", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "La respuesta es: 500"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:43:51.274662", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "win"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:43:53.031745", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:43:54.134838", "tipo": "fisico", "comando": "COMANDO_ATAJO", "parametros": {"teclas": "enter"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:43:54.135341", "tipo": "fisico", "comando": "COMANDO_ABRIR_APP", "parametros": {"nombre": "calculadora"}, "resultado": "OK", "aprobado": true}
+{"timestamp": "2026-04-30T20:44:37.965328", "tipo": "fisico", "comando": "COMANDO_ESCRIBIR", "parametros": {"texto": "La respuesta es: 500"}, "resultado": "OK", "aprobado": true}

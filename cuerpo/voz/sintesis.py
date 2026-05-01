@@ -1,89 +1,175 @@
 """
-Sistema Vocal de A.B.R.I.L. — Fase 5
-Utiliza Edge-TTS (voces neuronales en la nube) para una síntesis de voz
-extremadamente realista, dulce y con emociones dinámicas.
+Sistema Vocal de A.B.R.I.L. — Fase 6: Cuerdas Vocales Clonadas (XTTS v2 Local)
+Utiliza Coqui XTTS para síntesis de voz local con clonación a partir del ADN
+vocal almacenado en abril6.wav. Incluye bypass de compatibilidad para
+PyTorch 2.6+ y torchaudio.
+
+Seguridad:
+  - Sanitización de texto antes de síntesis (evita inyección de SSML/caracteres
+    de control que podrían causar comportamiento inesperado en el modelo TTS).
+  - Manejo robusto de errores con cleanup de archivos temporales.
+  - Mutex de reproducción para evitar colisiones de audio.
 """
-import edge_tts
-import asyncio
-import pygame
+import sys
+# Fix encoding para terminales Windows cp1252
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+import time
 import os
 import re
-from cerebro.emociones import motor_emocional
+import threading
+import torch
+import soundfile as sf
+import pygame
+from pathlib import Path
 
-class MotorVoz:
+# --- HACK PARA PYTORCH 2.6+ ---
+# PyTorch 2.6 cambió weights_only=True como default, lo cual rompe la carga
+# de modelos XTTS que usan pickle. Este parche lo revierte de forma controlada.
+_original_torch_load = torch.load
+def _parche_load(*args, **kwargs):
+    kwargs['weights_only'] = False
+    return _original_torch_load(*args, **kwargs)
+torch.load = _parche_load
+
+# --- BYPASS DE AUDIO ---
+# XTTS depende de torchaudio.load() que puede fallar en ciertas configuraciones.
+# Reemplazamos con soundfile que es más estable en Windows.
+import torchaudio
+def _parche_audio(filepath):
+    audio, sr = sf.read(filepath)
+    if len(audio.shape) > 1:
+        audio = audio.mean(axis=1)
+    tensor = torch.FloatTensor(audio).unsqueeze(0)
+    return tensor, sr
+torchaudio.load = _parche_audio
+# -----------------------
+
+from TTS.api import TTS
+
+# Ruta raíz del proyecto (donde está abril6.wav)
+_RUTA_PROYECTO = Path(__file__).resolve().parent.parent.parent
+
+# Caracteres permitidos en texto para síntesis (sanitización)
+_PATRON_SANITIZACION = re.compile(r'[^\w\s.,!?¡¿:;\-\'"áéíóúñÁÉÍÓÚÑüÜ]')
+# Longitud máxima de texto por llamada (protección contra prompts gigantes)
+_MAX_LONGITUD_TEXTO = 500
+
+
+class VozAbril:
+    """
+    Motor de síntesis de voz clonada usando XTTS v2.
+    Carga el modelo una sola vez en RAM al inicializar y reutiliza la instancia
+    para todas las llamadas posteriores, minimizando latencia.
+
+    Atributos:
+        activo (bool): Permite desactivar la voz sin destruir la instancia.
+        engine_cargado (bool): Indica si el modelo TTS se cargó correctamente.
+    """
     def __init__(self):
+        print("[SISTEMA] Calentando cuerdas vocales XTTS en RAM (Bypass activo)...")
         self.activo = True
-        # Voz neuronal, estilo IA profesional y eficiente (V.I.E.R.N.E.S.)
-        self.voz = "es-MX-DaliaNeural" 
-        
-        # Inicializar el mixer de audio
+        self.engine_cargado = False
+        self._lock = threading.Lock()  # Mutex para evitar colisiones de audio
+
+        # Ruta al ADN vocal y archivo de salida temporal
+        self.archivo_muestra = str(_RUTA_PROYECTO / "abril6.wav")
+        self.archivo_salida = str(_RUTA_PROYECTO / "respuesta_abril.wav")
+
+        # Validar que el archivo de muestra vocal existe
+        if not os.path.exists(self.archivo_muestra):
+            print(f"[VOZ ERROR] Archivo de muestra vocal no encontrado: {self.archivo_muestra}")
+            print("   Sin este archivo, la clonación de voz no funcionará.")
+            return
+
         try:
+            # Carga el modelo XTTS v2 una sola vez (consume ~2GB RAM)
+            self.tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=False)
             pygame.mixer.init()
             self.engine_cargado = True
+            print("[SISTEMA OK] Modulo de voz clonada en linea.")
         except Exception as e:
-            print(f"⚠️ Error al inicializar audio (pygame): {e}")
-            self.engine_cargado = False
+            print(f"[VOZ ERROR] Error al cargar modelo XTTS: {e}")
+            print("   La voz estará desactivada esta sesión.")
 
-    async def _generar_y_reproducir(self, texto):
+    def _sanitizar_texto(self, texto):
+        """
+        Limpia el texto antes de enviarlo al modelo TTS.
+        Elimina emojis, caracteres de control, SSML tags y limita longitud.
+        Esto previene:
+          - Inyección de caracteres que causen errores en el modelo.
+          - Textos excesivamente largos que congelen el sistema.
+        """
+        if not texto:
+            return ""
+        # Eliminar caracteres no permitidos (emojis, símbolos raros, etc.)
+        texto_limpio = _PATRON_SANITIZACION.sub('', texto)
+        # Colapsar espacios múltiples
+        texto_limpio = re.sub(r'\s+', ' ', texto_limpio).strip()
+        # Truncar si excede el límite
+        if len(texto_limpio) > _MAX_LONGITUD_TEXTO:
+            # Cortar en el último punto o espacio antes del límite
+            corte = texto_limpio[:_MAX_LONGITUD_TEXTO].rfind('.')
+            if corte == -1:
+                corte = texto_limpio[:_MAX_LONGITUD_TEXTO].rfind(' ')
+            if corte == -1:
+                corte = _MAX_LONGITUD_TEXTO
+            texto_limpio = texto_limpio[:corte + 1]
+        return texto_limpio
+
+    def hablar(self, texto):
+        """
+        Genera y reproduce audio a partir del texto proporcionado.
+        Bloquea el hilo actual hasta que termine la reproducción para evitar
+        que el sistema de escucha capture su propia voz (anti-feedback).
+
+        Args:
+            texto (str): El texto a sintetizar y reproducir.
+        """
         if not self.activo or not self.engine_cargado:
             return
-            
-        # Limpiar texto: mantener solo letras, números y puntuación básica.
-        # Esto elimina emojis, asteriscos y símbolos raros para que no los lea literal.
-        texto_limpio = re.sub(r'[^\w\s.,!?¡¿:;\-\'\"]', '', texto)
-        if not texto_limpio.strip():
+        
+        texto_limpio = self._sanitizar_texto(texto)
+        if not texto_limpio:
             return
 
-        archivo = "temp_abril_voz.mp3"
-        try:
-            # Ajuste dinámico de las cuerdas vocales según el Sistema Límbico
-            pitch = "+0Hz"
-            rate = "+2%"
-            
-            motor_emocional.procesar_ciclo()
-            
-            # Modulación emocional dinámica
-            if motor_emocional.estres > 70:
-                pitch = "+15Hz"   # Voz más aguda por la tensión
-                rate = "+20%"     # Habla más rápido
-            elif motor_emocional.energia < 30:
-                pitch = "-10Hz"   # Voz más grave por el cansancio
-                rate = "-15%"     # Habla más lento
-            elif motor_emocional.satisfaccion > 80:
-                pitch = "+5Hz"    # Un tono ligeramente más dulce/animado
-                rate = "+5%"
-            elif motor_emocional.satisfaccion < 30:
-                pitch = "-5Hz"    # Tono frío y apagado
-                rate = "+0%"
-                
-            communicate = edge_tts.Communicate(texto_limpio, self.voz, rate=rate, pitch=pitch)
-            await communicate.save(archivo)
-            
-            # Reproducir con pygame bloqueando solo esta corutina
-            pygame.mixer.music.load(archivo)
-            pygame.mixer.music.play()
-            
-            while pygame.mixer.music.get_busy():
-                await asyncio.sleep(0.1)
-                
-            pygame.mixer.music.unload()
-            
-            # Eliminar archivo temporal
-            if os.path.exists(archivo):
+        # El lock evita que dos hilos intenten hablar al mismo tiempo
+        with self._lock:
+            try:
+                print(f"[SINTETIZANDO]: {texto_limpio[:80]}...")
+                self.tts.tts_to_file(
+                    text=texto_limpio,
+                    file_path=self.archivo_salida,
+                    speaker_wav=self.archivo_muestra,
+                    language="es"
+                )
+
+                pygame.mixer.music.load(self.archivo_salida)
+                pygame.mixer.music.play()
+
+                # Bloquea mientras habla (anti-feedback con el micrófono)
+                while pygame.mixer.music.get_busy():
+                    time.sleep(0.1)
+
+                pygame.mixer.music.unload()
+
+            except Exception as e:
+                print(f"[VOZ ERROR]: {e}")
+            finally:
+                # Limpieza del archivo temporal
                 try:
-                    os.remove(archivo)
-                except:
+                    if os.path.exists(self.archivo_salida):
+                        os.remove(self.archivo_salida)
+                except OSError:
                     pass
-        except Exception as e:
-            print(f"⚠️ Error de voz: {e}")
 
-    async def hablar(self, texto):
-        """Habla el texto de forma asíncrona usando voces neuronales."""
-        await self._generar_y_reproducir(texto)
 
-# Instancia global
-voz = MotorVoz()
+# --- Instancia global y helpers compatibles con el sistema existente ---
+voz = VozAbril()
 
 def decir(texto):
-    """Función helper para usar en scripts."""
-    asyncio.create_task(voz.hablar(texto))
+    """
+    Función helper síncrona para usar desde cualquier módulo.
+    Mantiene compatibilidad con las llamadas existentes en abril.py.
+    """
+    voz.hablar(texto)
