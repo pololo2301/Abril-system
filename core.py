@@ -5,7 +5,7 @@ from google import genai
 from enum import Enum
 
 # Configuración de A.B.R.I.L.
-CLAVE_API = "AIzaSyBtgFaAFpEH4qr-4v6V8xIkHHdTPZR6gTQ" # Asegúrate de poner tu clave válida
+CLAVE_API = "" # Asegúrate de poner tu clave válida
 client = genai.Client(api_key=CLAVE_API)
 
 class AgentState(Enum):
